@@ -1,16 +1,18 @@
 import PIL
+import numpy as np
 
-def split_into_squares(img):
-    """Extract a left and a right square from ndarray"""
+def get_square(img, pos):
+    """Extract a left or a right square from PILimg"""
     """shape : (H, W, C))"""
+    img = np.array(img)
+
     h = img.shape[0]
     w = img.shape[1]
 
-
-    left = img[:, :h]
-    right = img[:, -h:]
-
-    return left, right
+    if pos == 0:
+        return img[:, :h]
+    else:
+        return img[:, -h:]
 
 def resize_and_crop(pilimg, scale=0.5, final_height=640):
     w = pilimg.size[0]
