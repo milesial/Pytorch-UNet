@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 
+
 def plot_img_mask(img, mask):
     fig = plt.figure()
 
