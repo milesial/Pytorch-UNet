@@ -1,13 +1,19 @@
 import torch
+import torch.backends.cudnn as cudnn
+import torch.nn.functional as F
+import torch.nn as nn
 
 from load import *
 from data_vis import *
 from utils import split_train_val, batch
 from myloss import DiceLoss
+from eval import eval_net
 from unet_model import UNet
 from torch.autograd import Variable
 from torch import optim
 from optparse import OptionParser
+import sys
+import os
 
 
 def train_net(net, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
@@ -39,13 +45,20 @@ def train_net(net, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
     train = get_imgs_and_masks(iddataset['train'], dir_img, dir_mask)
     val = get_imgs_and_masks(iddataset['val'], dir_img, dir_mask)
 
-    optimizer = optim.Adam(net.parameters(), lr=lr)
-    criterion = DiceLoss()
+    optimizer = optim.SGD(net.parameters(),
+                          lr=lr, momentum=0.9, weight_decay=0.0005)
+    criterion = nn.BCELoss()
 
     for epoch in range(epochs):
         print('Starting epoch {}/{}.'.format(epoch+1, epochs))
+        train = get_imgs_and_masks(iddataset['train'], dir_img, dir_mask)
+        val = get_imgs_and_masks(iddataset['val'], dir_img, dir_mask)
 
         epoch_loss = 0
+
+        if 1:
+            val_dice = eval_net(net, val, gpu)
+            print('Validation Dice Coeff: {}'.format(val_dice))
 
         for i, b in enumerate(batch(train, batch_size)):
             X = np.array([i[0] for i in b])
@@ -61,17 +74,22 @@ def train_net(net, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
                 X = Variable(X)
                 y = Variable(y)
 
-            optimizer.zero_grad()
-
             y_pred = net(X)
+            probs = F.sigmoid(y_pred)
+            probs_flat = probs.view(-1)
 
-            loss = criterion(y_pred, y.float())
+            y_flat = y.view(-1)
+
+            loss = criterion(probs_flat, y_flat.float())
             epoch_loss += loss.data[0]
 
             print('{0:.4f} --- loss: {1:.6f}'.format(i*batch_size/N_train,
-                                              loss.data[0]))
+                                                     loss.data[0]))
+
+            optimizer.zero_grad()
 
             loss.backward()
+
             optimizer.step()
 
         print('Epoch finished ! Loss: {}'.format(epoch_loss/i))
@@ -83,23 +101,38 @@ def train_net(net, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
             print('Checkpoint {} saved !'.format(epoch+1))
 
 
-parser = OptionParser()
-parser.add_option("-e", "--epochs", dest="epochs", default=5, type="int",
-                  help="number of epochs")
-parser.add_option("-b", "--batch-size", dest="batchsize", default=10,
-                  type="int", help="batch size")
-parser.add_option("-l", "--learning-rate", dest="lr", default=0.1,
-                  type="int", help="learning rate")
-parser.add_option("-g", "--gpu", action="store_true", dest="gpu",
-                  default=False, help="use cuda")
-parser.add_option("-n", "--ngpu", action="store_false", dest="gpu",
-                  default=False, help="use cuda")
+if __name__ == '__main__':
+    parser = OptionParser()
+    parser.add_option('-e', '--epochs', dest='epochs', default=5, type='int',
+                      help='number of epochs')
+    parser.add_option('-b', '--batch-size', dest='batchsize', default=10,
+                      type='int', help='batch size')
+    parser.add_option('-l', '--learning-rate', dest='lr', default=0.1,
+                      type='float', help='learning rate')
+    parser.add_option('-g', '--gpu', action='store_true', dest='gpu',
+                      default=False, help='use cuda')
+    parser.add_option('-c', '--load', dest='load',
+                      default=False, help='load file model')
 
+    (options, args) = parser.parse_args()
 
-(options, args) = parser.parse_args()
+    net = UNet(3, 1)
 
-net = UNet(3, 1)
-if options.gpu:
-    net.cuda()
+    if options.load:
+        net.load_state_dict(torch.load(options.load))
+        print('Model loaded from {}'.format(options.load))
 
-train_net(net, options.epochs, options.batchsize, options.lr, gpu=options.gpu)
+    if options.gpu:
+        net.cuda()
+        cudnn.benchmark = True
+
+    try:
+        train_net(net, options.epochs, options.batchsize, options.lr,
+                  gpu=options.gpu)
+    except KeyboardInterrupt:
+        torch.save(net.state_dict(), 'INTERRUPTED.pth')
+        print('Saved interrupt')
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)

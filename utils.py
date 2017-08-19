@@ -13,7 +13,7 @@ def get_square(img, pos):
         return img[:, -h:]
 
 
-def resize_and_crop(pilimg, scale=0.2, final_height=None):
+def resize_and_crop(pilimg, scale=0.5, final_height=None):
     w = pilimg.size[0]
     h = pilimg.size[1]
     newW = int(w * scale)
@@ -46,6 +46,7 @@ def split_train_val(dataset, val_percent=0.05):
     dataset = list(dataset)
     length = len(dataset)
     n = int(length * val_percent)
+    random.seed(42)
     random.shuffle(dataset)
     return {'train': dataset[:-n], 'val': dataset[-n:]}
 

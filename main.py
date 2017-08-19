@@ -8,16 +8,19 @@ from torch import optim
 #data manipulation
 import numpy as np
 import pandas as pd
-import cv2
 import PIL
 
 #load files
 import os
 
-#data vis
+#data visualization
 from data_vis import plot_img_mask
 from utils import *
 import matplotlib.pyplot as plt
+
+#quit after interrupt
+import sys
+
 
 
 dir = 'data'
@@ -33,69 +36,71 @@ np.random.shuffle(ids)
 
 
 net = UNet(3, 1)
+net.cuda()
 
-optimizer = optim.Adam(net.parameters(), lr=0.001)
-criterion = DiceLoss()
+def train(net):
+    optimizer = optim.Adam(net.parameters(), lr=1)
+    criterion = DiceLoss()
 
-dataset = []
-epochs = 5
-for epoch in range(epochs):
-    print('epoch {}/{}...'.format(epoch+1, epochs))
-    l = 0
+    epochs = 5
+    for epoch in range(epochs):
+        print('epoch {}/{}...'.format(epoch+1, epochs))
+        l = 0
 
-    for i, c in enumerate(ids):
-        id = c[0]
-        pos = c[1]
-        im = PIL.Image.open(dir + '/train/' + id + '.jpg')
-        im = resize_and_crop(im)
+        for i, c in enumerate(ids):
+            id = c[0]
+            pos = c[1]
+            im = PIL.Image.open(dir + '/train/' + id + '.jpg')
+            im = resize_and_crop(im)
 
-        ma = PIL.Image.open(dir + '/train_masks/' + id + '_mask.gif')
-        ma = resize_and_crop(ma)
+            ma = PIL.Image.open(dir + '/train_masks/' + id + '_mask.gif')
+            ma = resize_and_crop(ma)
 
-        left, right = split_into_squares(np.array(im))
-        left_m, right_m = split_into_squares(np.array(ma))
+            left, right = split_into_squares(np.array(im))
+            left_m, right_m = split_into_squares(np.array(ma))
 
-        if pos == 0:
-            X = left
-            y = left_m
-        else:
-            X = right
-            y = right_m
-
-
-        X = np.transpose(X, axes=[2, 0, 1])
-        X = torch.FloatTensor(X / 255).unsqueeze(0)
-        y = Variable(torch.ByteTensor(y))
-
-        X = Variable(X, requires_grad=False)
-
-        optimizer.zero_grad()
-
-        y_pred = net(X).squeeze(1)
+            if pos == 0:
+                X = left
+                y = left_m
+            else:
+                X = right
+                y = right_m
 
 
-        loss = criterion(y_pred, y.unsqueeze(0).float())
+            X = np.transpose(X, axes=[2, 0, 1])
+            X = torch.FloatTensor(X / 255).unsqueeze(0).cuda()
+            y = Variable(torch.ByteTensor(y)).cuda()
 
-        l += loss.data[0]
-        loss.backward()
-        optimizer.step()
+            X = Variable(X).cuda()
 
-        print('{0:.4f}%.'.format(i/len(ids)*100, end=''))
+            optimizer.zero_grad()
 
-    print('Loss : {}'.format(l))
-
-
-#%%
+            y_pred = net(X).squeeze(1)
 
 
+            loss = criterion(y_pred, y.unsqueeze(0).float())
 
+            l += loss.data[0]
+            loss.backward()
+            if i%10 == 0:
+                optimizer.step()
+                print('Stepped')
 
-#net = UNet(3, 2)
+            print('{0:.4f}%\t\t{1:.6f}'.format(i/len(ids)*100, loss.data[0]))
 
-#x = Variable(torch.FloatTensor(np.random.randn(1, 3, 640, 640)))
+        l = l / len(ids)
+        print('Loss : {}'.format(l))
+        torch.save(net.state_dict(), 'MODEL_EPOCH{}_LOSS{}.pth'.format(epoch+1, l))
+        print('Saved')
 
-#y = net(x)
+try:
+    net.load_state_dict(torch.load('MODEL_INTERRUPTED.pth'))
+    train(net)
 
-
-#plt.imshow(y[0])
-#plt.show()
+except KeyboardInterrupt:
+    print('Interrupted')
+    torch.save(net.state_dict(), 'MODEL_INTERRUPTED.pth')
+    try:
+        sys.exit(0)
+    except SystemExit:
+        os._exit(0)
