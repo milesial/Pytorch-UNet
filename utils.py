@@ -53,3 +53,39 @@ def split_train_val(dataset, val_percent=0.05):
 
 def normalize(x):
     return x / 255
+
+
+def merge_masks(img1, img2, full_w):
+    w = img1.shape[1]
+    overlap = int(2 * w - full_w)
+    h = img1.shape[0]
+
+    new = np.zeros((h, full_w), np.float32)
+
+    margin = 0
+
+    new[:, :full_w//2+1] = img1[:, :full_w//2+1]
+    new[:, full_w//2+1:] = img2[:, -(full_w//2-1):]
+    #new[:, w-overlap+1+margin//2:-(w-overlap+margin//2)] = (img1[:, -overlap+margin:] +
+    #                                  img2[:, :overlap-margin])/2
+
+    return new
+
+
+def encode(mask):
+    """mask : HxW"""
+    flat = mask.transpose().reshape(-1)
+    enc = []
+    i = 0
+    while i < len(flat): # sorry python
+        if(flat[i]):
+            s = i
+            while(flat[i]):
+                i += 1
+            e = i-1
+            if(s != e):
+                enc.append(s)
+                enc.append(e - s + 1)
+        i += 1
+
+    return enc
