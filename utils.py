@@ -72,20 +72,50 @@ def merge_masks(img1, img2, full_w):
     return new
 
 
+import matplotlib.pyplot as plt
+
 def encode(mask):
     """mask : HxW"""
+    plt.imshow(mask.transpose())
+    plt.show()
     flat = mask.transpose().reshape(-1)
     enc = []
-    i = 0
-    while i < len(flat): # sorry python
-        if(flat[i]):
+    i = 1
+
+    while i <= len(flat):
+        if(flat[i-1]):
             s = i
-            while(flat[i]):
+            while(flat[i-1]):
                 i += 1
             e = i-1
-            if(s != e):
-                enc.append(s)
-                enc.append(e - s + 1)
+            enc.append(s)
+            enc.append(e - s + 1)
         i += 1
 
+    plt.imshow(decode(enc))
+    plt.show()
     return enc
+
+def decode(list):
+    mask = np.zeros((1280*1920), np.bool)
+
+    for i, e in enumerate(list):
+        if(i%2 == 0):
+            mask[e-1:e-2+list[i+1]] = True
+
+    mask = mask.reshape(1920, 1280).transpose()
+
+    return mask
+
+
+def rle_encode(mask_image):
+    pixels = mask_image.flatten()
+    # We avoid issues with '1' at the start or end (at the corners of
+    # the original image) by setting those pixels to '0' explicitly.
+    # We do not expect these to be non-zero for an accurate mask,
+    # so this should not harm the score.
+    pixels[0] = 0
+    pixels[-1] = 0
+    runs = np.where(pixels[1:] != pixels[:-1])[0] + 2
+    runs[1::2] = runs[1::2] - runs[:-1:2]
+    return runs
