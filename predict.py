@@ -12,6 +12,7 @@ from crf import dense_crf
 
 from unet import UNet
 
+
 def predict_img(net, full_img, gpu=False):
     img = resize_and_crop(full_img)
 
@@ -39,7 +40,7 @@ def predict_img(net, full_img, gpu=False):
     y_l = F.upsample_bilinear(y_l, scale_factor=2).data[0][0].cpu().numpy()
     y_r = F.upsample_bilinear(y_r, scale_factor=2).data[0][0].cpu().numpy()
 
-    y = merge_masks(y_l, y_r, 1918)
+    y = merge_masks(y_l, y_r, full_img.size[0])
     yy = dense_crf(np.array(full_img).astype(np.uint8), y)
 
     return yy > 0.5

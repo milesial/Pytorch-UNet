@@ -6,6 +6,7 @@ This model scored a [dice coefficient](https://en.wikipedia.org/wiki/S%C3%B8rens
 The model used for the last submission is stored in the `MODEL.pth` file, if you wish to play with it. The data is available on the [Kaggle website](https://www.kaggle.com/c/carvana-image-masking-challenge/data).
 
 ## Usage
+
 ### Prediction
 
 You can easily test the output masks on your images via the CLI.
@@ -13,13 +14,16 @@ To see all options:
 `python predict.py -h`
 
 To predict a single image and save it:
-`python predict.py -i image.jpg -o ouput.jpg
+
+`python predict.py -i image.jpg -o ouput.jpg`
 
 To predict a multiple images and show them without saving them:
+
 `python predict.py -i image1.jpg image2.jpg --viz --no-save`
 
 You can use the cpu-only version with `--cpu`.
+
 You can specify which model file to use with `--model MODEL.pth`.
 
-## Note
-The code and the overall project architecture is a big mess for now, as I left it abandoned when the challenge finished. I will clean it Soon<sup>TM</sup>.
+## Warning
+In order to process the image, it is splitted into two squares (a left on and a right one), and each square is passed into the net. The two square masks are then merged again to produce the final image. As a consequence, the height of the image must be strictly superior than half the width. Make sure the width is even too.

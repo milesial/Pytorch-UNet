@@ -1,3 +1,4 @@
+# used to predict all test images and encode results in a csv file
 
 import os
 from PIL import Image
