@@ -32,7 +32,7 @@ def eval_net(net, dataset, gpu=False):
         dice = dice_coeff(y_pred, y.float()).data[0]
         tot += dice
 
-        if 1:
+        if 0:
             X = X.data.squeeze(0).cpu().numpy()
             X = np.transpose(X, axes=[1, 2, 0])
             y = y.data.squeeze(0).cpu().numpy()
@@ -46,7 +46,6 @@ def eval_net(net, dataset, gpu=False):
             ax2.imshow(y)
             ax3 = fig.add_subplot(1, 4, 3)
             ax3.imshow((y_pred > 0.5))
-
 
             Q = dense_crf(((X*255).round()).astype(np.uint8), y_pred)
             ax4 = fig.add_subplot(1, 4, 4)
