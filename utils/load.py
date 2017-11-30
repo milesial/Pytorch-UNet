@@ -8,7 +8,7 @@ import numpy as np
 
 from PIL import Image
 from functools import partial
-from utils import resize_and_crop, get_square, normalize
+from .utils import resize_and_crop, get_square, normalize
 
 
 def get_ids(dir):

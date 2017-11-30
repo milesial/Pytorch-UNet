@@ -2,10 +2,10 @@ import torch
 from myloss import dice_coeff
 import numpy as np
 from torch.autograd import Variable
-from data_vis import plot_img_mask
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
-from crf import dense_crf
+
+from utils import dense_crf, plot_img_mask
 
 
 def eval_net(net, dataset, gpu=False):

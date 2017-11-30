@@ -14,7 +14,6 @@ import PIL
 import os
 
 #data visualization
-from data_vis import plot_img_mask
 from utils import *
 import matplotlib.pyplot as plt
 

@@ -8,7 +8,6 @@ import argparse
 import os
 
 from utils import *
-from crf import dense_crf
 
 from unet import UNet
 

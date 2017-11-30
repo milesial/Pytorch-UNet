@@ -15,7 +15,6 @@ def dense_crf(img, output_probs):
     U = np.ascontiguousarray(U)
     img = np.ascontiguousarray(img)
 
-
     d.setUnaryEnergy(U)
 
     d.addPairwiseGaussian(sxy=20, compat=3)

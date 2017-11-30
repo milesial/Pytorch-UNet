@@ -3,9 +3,7 @@ import torch.backends.cudnn as cudnn
 import torch.nn.functional as F
 import torch.nn as nn
 
-from load import *
-from data_vis import *
-from utils import split_train_val, batch
+from utils import *
 from myloss import DiceLoss
 from eval import eval_net
 from unet import UNet
@@ -14,7 +12,6 @@ from torch import optim
 from optparse import OptionParser
 import sys
 import os
-import argparse
 
 
 def train_net(net, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,

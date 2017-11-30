@@ -1,5 +1,8 @@
 # Pytorch-UNet
-Customized implementation of the [U-Net](https://arxiv.org/pdf/1505.04597.pdf) in Pytorch for Kaggle's [Carvana Image Masking Challenge](https://www.kaggle.com/c/carvana-image-masking-challenge).
+![input and output for a random image in the test dataset](https://framapic.org/YqBT4lbLrcfc/kQcSxYDv1Pfk.png)
+
+
+Customized implementation of the [U-Net](https://arxiv.org/pdf/1505.04597.pdf) in Pytorch for Kaggle's [Carvana Image Masking Challenge](https://www.kaggle.com/c/carvana-image-masking-challenge), with only 1 output class, from a high definition image.
 
 This model scored a [dice coefficient](https://en.wikipedia.org/wiki/S%C3%B8rensen%E2%80%93Dice_coefficient) of 0.988423 (511 out of 735), which is bad but could be improved with more training, data augmentation, fine tuning, and playing with CRF post-processing.
 
@@ -7,7 +10,7 @@ The model used for the last submission is stored in the `MODEL.pth` file, if you
 
 ## Usage
 
-### Prediction
+### Prediction
 
 You can easily test the output masks on your images via the CLI.
 To see all options:
@@ -27,3 +30,6 @@ You can specify which model file to use with `--model MODEL.pth`.
 
 ## Warning
 In order to process the image, it is splitted into two squares (a left on and a right one), and each square is passed into the net. The two square masks are then merged again to produce the final image. As a consequence, the height of the image must be strictly superior than half the width. Make sure the width is even too.
+
+## Dependencies
+This package depends on [pydensecrf](https://github.com/lucasb-eyer/pydensecrf), available via `pip install`.
