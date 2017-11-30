@@ -1,8 +1,12 @@
+#!/usr/bin/python
+# full assembly of the sub-parts to form the complete net
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from unet_parts import *
+# python 3 confusing imports :(
+from .unet_parts import *
 
 
 class UNet(nn.Module):

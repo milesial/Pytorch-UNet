@@ -8,12 +8,13 @@ from data_vis import *
 from utils import split_train_val, batch
 from myloss import DiceLoss
 from eval import eval_net
-from unet_model import UNet
+from unet import UNet
 from torch.autograd import Variable
 from torch import optim
 from optparse import OptionParser
 import sys
 import os
+import argparse
 
 
 def train_net(net, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,

@@ -1,5 +1,5 @@
 #models
-from unet_model import UNet
+from unet import UNet
 from myloss import *
 import torch
 from torch.autograd import Variable

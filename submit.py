@@ -3,7 +3,7 @@ import os
 from PIL import Image
 from predict import *
 from utils import encode
-from unet_model import UNet
+from unet import UNet
 
 def submit(net, gpu=False):
     dir = 'data/test/'

@@ -119,3 +119,7 @@ def rle_encode(mask_image):
     runs = np.where(pixels[1:] != pixels[:-1])[0] + 2
     runs[1::2] = runs[1::2] - runs[:-1:2]
     return runs
+
+def full_process(filename):
+    im = PIL.Image.open(filename)
+    im = resize_and_crop(im)
