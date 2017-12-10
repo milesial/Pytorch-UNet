@@ -15,7 +15,7 @@ def eval_net(net, dataset, gpu=False):
         y = b[1]
 
         X = torch.FloatTensor(X).unsqueeze(0)
-        y = torch.ByteTensor(y).unsqueeze(0)
+        y = torch.FloatTensor(y).unsqueeze(0)
 
         if gpu:
             X = Variable(X, volatile=True).cuda()
