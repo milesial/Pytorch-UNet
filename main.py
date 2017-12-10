@@ -22,7 +22,8 @@ import sys
 
 
 
-dir = 'data'
+dir = '/scratch/chchao/project/data'
+
 ids = []
 
 for f in os.listdir(dir + '/train'):
