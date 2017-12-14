@@ -33,8 +33,8 @@ class myLoss(nn.Module):
 
 def train_net(net, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
               cp=True, gpu=False):
-    # prefix = "/scratch/chchao/project/"
-    prefix = ""
+    prefix = "/scratch/chchao/project/"
+    # prefix = ""
     dir_img = prefix + 'data/train/'
     dir_mask = prefix + 'data/train_masks/'
     dir_checkpoint = 'checkpoints/'
