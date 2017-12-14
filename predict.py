@@ -6,6 +6,7 @@ import numpy
 from PIL import Image
 import argparse
 import os
+import torchvision
 
 from utils import *
 
@@ -13,36 +14,49 @@ from unet import UNet
 
 
 def predict_img(net, full_img, gpu=False):
-    img = resize_and_crop(full_img)
+    # img = resize_and_crop(full_img)
+    img = numpy.array(resize(full_img))
+    img = normalize(img)
+    img = np.transpose(img, axes=[2,0,1])
+    # left = get_square(img, 0)
+    # right = get_square(img, 1)
 
-    left = get_square(img, 0)
-    right = get_square(img, 1)
+    # right = normalize(right)
+    # left = normalize(left)
 
-    right = normalize(right)
-    left = normalize(left)
+    # right = np.transpose(right, axes=[2, 0, 1])
+    # left = np.transpose(left, axes=[2, 0, 1])
 
-    right = np.transpose(right, axes=[2, 0, 1])
-    left = np.transpose(left, axes=[2, 0, 1])
-
-    X_l = torch.FloatTensor(left).unsqueeze(0)
-    X_r = torch.FloatTensor(right).unsqueeze(0)
+    # X_l = torch.FloatTensor(left).unsqueeze(0)
+    # X_r = torch.FloatTensor(right).unsqueeze(0)
+    X = torch.FloatTensor(img).unsqueeze(0)
 
     if gpu:
-        X_l = Variable(X_l, volatile=True).cuda()
-        X_r = Variable(X_r, volatile=True).cuda()
+        X = Variable(X, volatile=True).cuda()
+        # X_l = Variable(X_l, volatile=True).cuda()
+        # X_r = Variable(X_r, volatile=True).cuda()
     else:
-        X_l = Variable(X_l, volatile=True)
-        X_r = Variable(X_r, volatile=True)
+        X = Variable(X, volatile=True)
+        # X_l = Variable(X_l, volatile=True)
+        # X_r = Variable(X_r, volatile=True)
 
-    y_l = F.sigmoid(net(X_l))
-    y_r = F.sigmoid(net(X_r))
-    y_l = F.upsample_bilinear(y_l, scale_factor=2).data[0][0].cpu().numpy()
-    y_r = F.upsample_bilinear(y_r, scale_factor=2).data[0][0].cpu().numpy()
+    y = net(X)
+    # y = np.transpose(y, axes=[2,0,1])
+    # import pdb; pdb.set_trace()
+    # return y/torch.max(y)*255
+    return y
+    
+    # y_l = F.sigmoid(net(X_l))
+    # y_r = F.sigmoid(net(X_r))
+    # y_l = F.upsample_bilinear(y_l, scale_factor=2).data[0][0].cpu().numpy()
+    # y_r = F.upsample_bilinear(y_r, scale_factor=2).data[0][0].cpu().numpy()
+    # y = F.sigmoid(net(X))
+    # y = F.upsample_bilinear(y, scale_factor=2).data[0][0].cpu().numpy()
 
-    y = merge_masks(y_l, y_r, full_img.size[0])
-    yy = dense_crf(np.array(full_img).astype(np.uint8), y)
+    # y = merge_masks(y_l, y_r, full_img.size[0])
+    # yy = dense_crf(np.array(full_img).astype(np.uint8), y)
 
-    return yy > 0.5
+    # return yy > 0.5
 
 
 if __name__ == "__main__":
@@ -113,6 +127,9 @@ if __name__ == "__main__":
 
         if not args.no_save:
             out_fn = out_files[i]
-            result = Image.fromarray((out * 255).astype(numpy.uint8))
-            result.save(out_files[i])
+            import pdb; pdb.set_trace()
+            torchvision.utils.save_image(out.data, out_fn)
+            # import pdb; pdb.set_trace()
+            # result = Image.fromarray((out * 255).astype(numpy.uint8))
+            # result.save(out_files[i])
             print("Mask saved to {}".format(out_files[i]))

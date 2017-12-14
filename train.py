@@ -14,9 +14,27 @@ import sys
 import os
 
 
+class myLoss(nn.Module):
+    """Custom loss function.
+     """
+    # def __init__(self, margin):
+    def __init__(self):
+        super(myLoss, self).__init__()
+        # self.margin = margin
+    
+    def forward(self, a, b):
+        # a_numpy = a.data.numpy()
+        # b_numpy = b.data.numpy()
+        # d = a_numpy - b_numpy
+        # return np.sum(np.power(d, 2)) - np.sum(d)*np.sum(d)/2/np.prod(d.shape)
+        # loss = nn.MSELoss(a, b) - 0.5*nn.L1Loss(a, b)*nn.L1Loss(a, b)
+        loss = torch.sum((a -b)**2) - torch.sum(a-b)**2/(2*30720)
+        return loss
+
 def train_net(net, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
               cp=True, gpu=False):
-    prefix = "/scratch/chchao/project/"
+    # prefix = "/scratch/chchao/project/"
+    prefix = ""
     dir_img = prefix + 'data/train/'
     dir_mask = prefix + 'data/train_masks/'
     dir_checkpoint = 'checkpoints/'
@@ -45,25 +63,28 @@ def train_net(net, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
 
     optimizer = optim.SGD(net.parameters(),
                           lr=lr, momentum=0.9, weight_decay=0.0005)
-    criterion = nn.BCELoss()
+    # criterion = nn.BCELoss()
+    # criterion = myLoss()
+    criterion = nn.MSELoss()
 
     for epoch in range(epochs):
         print('Starting epoch {}/{}.'.format(epoch+1, epochs))
-        train = get_imgs_and_masks(iddataset['train'], dir_img, dir_mask)
-        val = get_imgs_and_masks(iddataset['val'], dir_img, dir_mask)
+        # train = get_imgs_and_masks(iddataset['train'], dir_img, dir_mask)
+        # val = get_imgs_and_masks(iddataset['val'], dir_img, dir_mask)
+        # import pdb; pdb.set_trace()
 
         epoch_loss = 0
 
-        if 1:
-            val_dice = eval_net(net, val, gpu)
-            print('Validation Dice Coeff: {}'.format(val_dice))
+        # if 0:
+        #     val_dice = eval_net(net, val, gpu)
+        #     print('Validation Dice Coeff: {}'.format(val_dice))
 
         for i, b in enumerate(batch(train, batch_size)):
             X = np.array([i[0] for i in b])
             y = np.array([i[1] for i in b])
-
+           
             X = torch.FloatTensor(X)
-            y = torch.ByteTensor(y)
+            y = torch.FloatTensor(y)
 
             if gpu:
                 X = Variable(X).cuda()
@@ -72,13 +93,16 @@ def train_net(net, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
                 X = Variable(X)
                 y = Variable(y)
 
+            import pdb; pdb.set_trace()
             y_pred = net(X)
-            probs = F.sigmoid(y_pred)
-            probs_flat = probs.view(-1)
+            # probs = F.sigmoid(y_pred)
+            # probs_flat = probs.view(-1)
+            y_pred_flat = y_pred.view(-1)
 
             y_flat = y.view(-1)
 
-            loss = criterion(probs_flat, y_flat.float())
+            import pdb; pdb.set_trace()
+            loss = criterion(y_pred_flat, y_flat.float())
             epoch_loss += loss.data[0]
 
             print('{0:.4f} --- loss: {1:.6f}'.format(i*batch_size/N_train,

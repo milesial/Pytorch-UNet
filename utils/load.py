@@ -30,8 +30,9 @@ def to_cropped_imgs(ids, dir, suffix):
 
 def yield_imgs(ids, dir, suffix):
     """From a list of tuples, returns the correct cropped img"""
+    print("in yield imgs")
     for id, pos in ids:
-        # import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         # im = resize_and_crop(Image.open(dir + id + suffix))
         im = Image.open(dir + id + suffix)
         im = resize(im, 0.1)
@@ -48,10 +49,13 @@ def yield_depth_masks(ids, dir, suffix):
 
 def yield_masks(ids, dir, suffix):
     """From a list of tuples, returns the correct cropped img"""
-    # import pdb; pdb.set_trace()
+    print("in yield masks")
+    import pdb; pdb.set_trace()
     for id, pos in ids:
+        import pdb; pdb.set_trace()
         im = Image.open(dir + id + suffix)
         im = resize(im, 0.1)
+        print (im)
         # yield get_square(im, pos)
         yield im
 
@@ -63,12 +67,14 @@ def get_imgs_and_masks(ids, dir_img, dir_mask):
     # import pdb; pdb.set_trace()
 
     # need to transform from HWC to CHW
+    #import pdb; pdb.set_trace()
     imgs = yield_imgs(ids, dir_img, ".jpg") 
-    # import pdb; pdb.set_trace()
     imgs_switched = map(partial(np.transpose, axes=[2, 0, 1]), imgs)
     # imgs_normalized = map(normalize, imgs_switched)
- 
+    print("ckp1")
+    #import pdb; pdb.set_trace()
     masks = yield_masks(ids, dir_mask, '.jpg')
+    print("ckp2")
     masks_switched = map(partial(np.transpose, axes=[2, 0, 1]), imgs)
     # masks_normalized = map(normalize, imgs_switched)
 
