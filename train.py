@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torch.nn as nn
 
 from utils import *
-from myloss import DiceLoss
+# from myloss import DiceLoss
 from eval import eval_net
 from unet import UNet
 from torch.autograd import Variable
@@ -12,6 +12,7 @@ from torch import optim
 from optparse import OptionParser
 import sys
 import os
+import numpy as np
 
 
 class myLoss(nn.Module):
@@ -21,22 +22,42 @@ class myLoss(nn.Module):
     def __init__(self):
         super(myLoss, self).__init__()
         # self.margin = margin
-    
+
     def forward(self, a, b):
         # a_numpy = a.data.numpy()
         # b_numpy = b.data.numpy()
         # d = a_numpy - b_numpy
         # return np.sum(np.power(d, 2)) - np.sum(d)*np.sum(d)/2/np.prod(d.shape)
         # loss = nn.MSELoss(a, b) - 0.5*nn.L1Loss(a, b)*nn.L1Loss(a, b)
-        loss = torch.sum((a -b)**2) - torch.sum(a-b)**2/(2*30720)
+        # import pdb; pdb.set_trace()
+        log_a  = torch.log(a)
+        np_log_a = log_a.cpu().data.numpy()
+        np_log_a = np.nan_to_num(np_log_a, 0)
+        log_a = Variable(torch.from_numpy(np_log_a), requires_grad=True).cuda()
+        log_b = torch.log(b)
+        np_log_b = log_b.cpu().data.numpy()
+        np_log_b = np.nan_to_num(np_log_b, 0)
+        log_b = Variable(torch.from_numpy(np_log_b), requires_grad=True).cuda()
+
+        d = log_a - log_b
+        test1 =  torch.sum(d**2)
+        test2 = torch.sum(d)**2
+        print (test1, test2)
+        lamda = 0.5
+        loss = torch.sum(d**2)/(768000) - lamda*torch.sum(d)**2/(768000**2)
+        # loss = torch.sum(d**2)/(768000) - torch.sum(d)**2/(768000**2)
+        # import pdb; pdb.set_trace()
         return loss
 
-def train_net(net, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
-              cp=True, gpu=False):
-    prefix = "/scratch/chchao/project/"
+def train_net(net, epochs=5, batch_size=10, lr=0.1, val_percent=0.05,
+              cp=True, gpu=False, mask_type="depth"):
+    prefix = "/data/chc631/project/"
     # prefix = ""
     dir_img = prefix + 'data/train/'
-    dir_mask = prefix + 'data/train_masks/'
+    if mask_type == "depth":
+        dir_mask = prefix + "data/train_masks_depth_map/"
+    else:
+        dir_mask = prefix + 'data/train_masks/'
     dir_checkpoint = 'checkpoints/'
 
     ids = get_ids(dir_img)
@@ -64,8 +85,10 @@ def train_net(net, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
     optimizer = optim.SGD(net.parameters(),
                           lr=lr, momentum=0.9, weight_decay=0.0005)
     # criterion = nn.BCELoss()
-    # criterion = myLoss()
-    criterion = nn.MSELoss()
+    criterion = myLoss()
+    # criterion = nn.SmoothL1Loss()
+    # criterion = nn.MSELoss()
+    # criterion = nn.L1Loss()
 
     for epoch in range(epochs):
         print('Starting epoch {}/{}.'.format(epoch+1, epochs))
@@ -82,9 +105,11 @@ def train_net(net, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
         for i, b in enumerate(batch(train, batch_size)):
             X = np.array([i[0] for i in b])
             y = np.array([i[1] for i in b])
-           
+
             X = torch.FloatTensor(X)
             y = torch.FloatTensor(y)
+            y = y.unsqueeze(0) # manually create a channel dimension for conv2d
+            y = y.transpose(0, 1)
 
             if gpu:
                 X = Variable(X).cuda()
@@ -93,16 +118,22 @@ def train_net(net, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
                 X = Variable(X)
                 y = Variable(y)
 
-            import pdb; pdb.set_trace()
+            # import pdb; pdb.set_trace()
             y_pred = net(X)
             # probs = F.sigmoid(y_pred)
             # probs_flat = probs.view(-1)
             y_pred_flat = y_pred.view(-1)
 
+            # y = Variable(y)
+            conv_mat = Variable(torch.ones(1,1,2,2)).cuda()
+            y = F.conv2d(y, conv_mat, stride=2)
+            y = torch.squeeze(y)
+
             y_flat = y.view(-1)
 
-            import pdb; pdb.set_trace()
+            # import pdb; pdb.set_trace()
             loss = criterion(y_pred_flat, y_flat.float())
+            # loss = criterion(y_pred, y.long())
             epoch_loss += loss.data[0]
 
             print('{0:.4f} --- loss: {1:.6f}'.format(i*batch_size/N_train,

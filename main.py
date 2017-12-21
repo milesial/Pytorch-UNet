@@ -22,11 +22,11 @@ import sys
 
 
 
-dir = '/scratch/chchao/project/data'
+dir = '/data/chc631/project/data'
 
 ids = []
 
-for f in os.listdir(dir + '/train'):
+for f in os.listdir(dir + '/train_masks_depth_map'):
     id = f[:-4]
     ids.append([id, 0])
     ids.append([id, 1])

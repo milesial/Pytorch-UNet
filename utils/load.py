@@ -30,12 +30,11 @@ def to_cropped_imgs(ids, dir, suffix):
 
 def yield_imgs(ids, dir, suffix):
     """From a list of tuples, returns the correct cropped img"""
-    print("in yield imgs")
     for id, pos in ids:
         #import pdb; pdb.set_trace()
         # im = resize_and_crop(Image.open(dir + id + suffix))
         im = Image.open(dir + id + suffix)
-        im = resize(im, 0.1)
+        im = resize(im, 0.5)
         # yield get_square(im, pos)
         yield im
 
@@ -49,15 +48,14 @@ def yield_depth_masks(ids, dir, suffix):
 
 def yield_masks(ids, dir, suffix):
     """From a list of tuples, returns the correct cropped img"""
-    print("in yield masks")
-    import pdb; pdb.set_trace()
+    to_return = []
     for id, pos in ids:
-        import pdb; pdb.set_trace()
         im = Image.open(dir + id + suffix)
-        im = resize(im, 0.1)
-        print (im)
+        im = resize(im, 0.5)
+        # print (im)
         # yield get_square(im, pos)
-        yield im
+        to_return.append(np.array(im)/255)
+    return to_return
 
 
 def get_imgs_and_masks(ids, dir_img, dir_mask):
@@ -68,18 +66,19 @@ def get_imgs_and_masks(ids, dir_img, dir_mask):
 
     # need to transform from HWC to CHW
     #import pdb; pdb.set_trace()
-    imgs = yield_imgs(ids, dir_img, ".jpg") 
+    imgs = yield_imgs(ids, dir_img, ".jpg")
     imgs_switched = map(partial(np.transpose, axes=[2, 0, 1]), imgs)
-    # imgs_normalized = map(normalize, imgs_switched)
-    print("ckp1")
+    imgs_normalized = map(normalize, imgs_switched)
     #import pdb; pdb.set_trace()
-    masks = yield_masks(ids, dir_mask, '.jpg')
-    print("ckp2")
-    masks_switched = map(partial(np.transpose, axes=[2, 0, 1]), imgs)
+    if "depth" in dir_mask:
+        masks = yield_depth_masks(ids, dir_mask, '.txt')
+    else:
+        masks = yield_masks(ids, dir_mask, '.jpg')
+    # masks_switched = map(partial(np.transpose, axes=[0]), masks)
     # masks_normalized = map(normalize, imgs_switched)
 
     # return zip(imgs_normalized, masks_normalized)
-    return zip(imgs_switched, masks_switched)
+    return zip(imgs_normalized, masks)
 
 def get_full_img_and_mask(id, dir_img, dir_mask):
     im = Image.open(dir_img + id + '.jpg')
