@@ -2,6 +2,9 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.nn.functional as F
 import torch.nn as nn
+import sys
+import os
+import numpy as np
 
 from utils import *
 from scaleInvarLoss import scaleInvarLoss
@@ -11,9 +14,6 @@ from unet import UNet4
 from torch.autograd import Variable
 from torch import optim
 from optparse import OptionParser
-import sys
-import os
-import numpy as np
 
 
 def train_net(net, epochs=5, batch_size=10, lr=0.1, val_percent=0.05,
@@ -48,13 +48,6 @@ def train_net(net, epochs=5, batch_size=10, lr=0.1, val_percent=0.05,
                len(iddataset['val']), str(cp), str(gpu)))
 
     N_train = len(iddataset['train'])
-    # if half_scale:
-    #     train = get_imgs_and_masks(iddataset['train'], dir_img, dir_mask, scale=0.5)
-    #     val = get_imgs_and_masks(iddataset['val'], dir_img, dir_mask, scale=0.5)
-    # else:
-    #     train = get_imgs_and_masks(iddataset['train'], dir_img, dir_mask, scale=1)
-    #     val = get_imgs_and_masks(iddataset['val'], dir_img, dir_mask, scale=1)
-
     optimizer = optim.SGD(net.parameters(),
                           lr=lr, momentum=0.9, weight_decay=0.0005)
     criterion = scaleInvarLoss()
@@ -90,8 +83,6 @@ def train_net(net, epochs=5, batch_size=10, lr=0.1, val_percent=0.05,
                 y = Variable(y)
 
             y_pred = net(X)
-            # probs = F.sigmoid(y_pred)
-            # probs_flat = probs.view(-1)
             y_pred_flat = y_pred.view(-1)
 
             if half_scale:
@@ -143,10 +134,15 @@ if __name__ == '__main__':
                       default=False, help='use full image')
     parser.add_option('--dir', dest='dir',
                       default='checkpoints/', type="string", help='saved model directory')
+    parser.add_option('--model', dest='model',
+                      default='unet5', type="string", help='choose unet model')
 
     (options, args) = parser.parse_args()
 
-    net = UNet4(3, 1)
+    if options.model == "unet4":
+        net = UNet4(3, 1)
+    else:
+        net = UNet(3, 1)
 
     if options.load:
         net.load_state_dict(torch.load(options.load))
