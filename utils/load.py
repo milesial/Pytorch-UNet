@@ -28,56 +28,60 @@ def to_cropped_imgs(ids, dir, suffix):
         im = resize_and_crop(Image.open(dir + id + suffix))
         yield get_square(im, pos)
 
-def yield_imgs(ids, dir, suffix):
+def yield_imgs(ids, dir, suffix, scale):
     """From a list of tuples, returns the correct cropped img"""
     for id, pos in ids:
         #import pdb; pdb.set_trace()
         # im = resize_and_crop(Image.open(dir + id + suffix))
         im = Image.open(dir + id + suffix)
-        im = resize(im, 0.5)
+        # import pdb; pdb.set_trace()
+        im = resize(im, scale)
         # yield get_square(im, pos)
         yield im
 
 def yield_depth_masks(ids, dir, suffix):
-    """From a list of tuples, returns the correct cropped img"""
+    """From a list of depth map, returns the correct cropped img"""
+    yield_flag = True
+
+    to_return = []
     for id, pos in ids:
         # im = resize_and_crop(Image.open(dir + id + suffix))
         df = pd.read_csv(dir+id+suffix, header=None)
-        yield df.values.tolist()
+        if not yield_flag:
+            to_return.append(df.values.tolist())
+        else:
+            yield df.values.tolist()
         # yield pd.Series(df.T.to_dict('list'))
+    if not yield_flag:
+        return to_return
 
-def yield_masks(ids, dir, suffix):
+def yield_masks(ids, dir, suffix, scale):
     """From a list of tuples, returns the correct cropped img"""
     to_return = []
     for id, pos in ids:
         im = Image.open(dir + id + suffix)
-        im = resize(im, 0.5)
-        # print (im)
-        # yield get_square(im, pos)
+        im = resize(im, scale)
         to_return.append(np.array(im)/255)
     return to_return
 
 
-def get_imgs_and_masks(ids, dir_img, dir_mask):
+def get_imgs_and_masks(ids, dir_img, dir_mask, scale):
     """Return all the couples (img, mask)"""
 
     # imgs = to_cropped_imgs(ids, dir_img, '.jpg')
-    # import pdb; pdb.set_trace()
 
     # need to transform from HWC to CHW
-    #import pdb; pdb.set_trace()
-    imgs = yield_imgs(ids, dir_img, ".jpg")
+    imgs = yield_imgs(ids, dir_img, ".jpg", scale)
     imgs_switched = map(partial(np.transpose, axes=[2, 0, 1]), imgs)
     imgs_normalized = map(normalize, imgs_switched)
-    #import pdb; pdb.set_trace()
     if "depth" in dir_mask:
         masks = yield_depth_masks(ids, dir_mask, '.txt')
     else:
         masks = yield_masks(ids, dir_mask, '.jpg')
-    # masks_switched = map(partial(np.transpose, axes=[0]), masks)
-    # masks_normalized = map(normalize, imgs_switched)
+        masks_switched = map(partial(np.transpose, axes=[0]), masks)
+        masks_normalized = map(normalize, imgs_switched)
+        masks = masks_normalized
 
-    # return zip(imgs_normalized, masks_normalized)
     return zip(imgs_normalized, masks)
 
 def get_full_img_and_mask(id, dir_img, dir_mask):
