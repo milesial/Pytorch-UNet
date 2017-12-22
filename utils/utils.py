@@ -13,19 +13,20 @@ def get_square(img, pos):
         return img[:, -h:]
 
 
-def resize_and_crop(pilimg, scale=0.5, final_height=None):
+# def resize_and_crop(pilimg, scale=0.5, final_height=None):
+def resize(pilimg, scale=0.5):
     w = pilimg.size[0]
     h = pilimg.size[1]
     newW = int(w * scale)
     newH = int(h * scale)
 
-    if not final_height:
-        diff = 0
-    else:
-        diff = newH - final_height
+    # if not final_height:
+    #     diff = 0
+    # else:
+    #     diff = newH - final_height
 
     img = pilimg.resize((newW, newH))
-    img = img.crop((0, diff // 2, newW, newH - diff // 2))
+    # img = img.crop((0, diff // 2, newW, newH - diff // 2))
     return img
 
 
