@@ -1,11 +1,11 @@
-import torch
-from myloss import dice_coeff
-import numpy as np
-from torch.autograd import Variable
 import matplotlib.pyplot as plt
+import numpy as np
+import torch
 import torch.nn.functional as F
+from torch.autograd import Variable
 
-from utils import dense_crf, plot_img_mask
+from myloss import dice_coeff
+from utils import dense_crf
 
 
 def eval_net(net, dataset, gpu=False):
@@ -47,7 +47,7 @@ def eval_net(net, dataset, gpu=False):
             ax3 = fig.add_subplot(1, 4, 3)
             ax3.imshow((y_pred > 0.5))
 
-            Q = dense_crf(((X*255).round()).astype(np.uint8), y_pred)
+            Q = dense_crf(((X * 255).round()).astype(np.uint8), y_pred)
             ax4 = fig.add_subplot(1, 4, 4)
             print(Q)
             ax4.imshow(Q > 0.5)

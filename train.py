@@ -1,17 +1,16 @@
+import sys
+from optparse import OptionParser
+
 import torch
 import torch.backends.cudnn as cudnn
-import torch.nn.functional as F
 import torch.nn as nn
+import torch.nn.functional as F
+from torch import optim
+from torch.autograd import Variable
 
-from utils import *
-from myloss import DiceLoss
 from eval import eval_net
 from unet import UNet
-from torch.autograd import Variable
-from torch import optim
-from optparse import OptionParser
-import sys
-import os
+from utils import *
 
 
 def train_net(net, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
@@ -39,15 +38,14 @@ def train_net(net, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
 
     N_train = len(iddataset['train'])
 
-    train = get_imgs_and_masks(iddataset['train'], dir_img, dir_mask)
-    val = get_imgs_and_masks(iddataset['val'], dir_img, dir_mask)
-
     optimizer = optim.SGD(net.parameters(),
                           lr=lr, momentum=0.9, weight_decay=0.0005)
     criterion = nn.BCELoss()
 
     for epoch in range(epochs):
-        print('Starting epoch {}/{}.'.format(epoch+1, epochs))
+        print('Starting epoch {}/{}.'.format(epoch + 1, epochs))
+
+        # reset the generators
         train = get_imgs_and_masks(iddataset['train'], dir_img, dir_mask)
         val = get_imgs_and_masks(iddataset['val'], dir_img, dir_mask)
 
@@ -80,7 +78,7 @@ def train_net(net, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
             loss = criterion(probs_flat, y_flat.float())
             epoch_loss += loss.data[0]
 
-            print('{0:.4f} --- loss: {1:.6f}'.format(i*batch_size/N_train,
+            print('{0:.4f} --- loss: {1:.6f}'.format(i * batch_size / N_train,
                                                      loss.data[0]))
 
             optimizer.zero_grad()
@@ -89,13 +87,13 @@ def train_net(net, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
 
             optimizer.step()
 
-        print('Epoch finished ! Loss: {}'.format(epoch_loss/i))
+        print('Epoch finished ! Loss: {}'.format(epoch_loss / i))
 
         if cp:
             torch.save(net.state_dict(),
-                       dir_checkpoint + 'CP{}.pth'.format(epoch+1))
+                       dir_checkpoint + 'CP{}.pth'.format(epoch + 1))
 
-            print('Checkpoint {} saved !'.format(epoch+1))
+            print('Checkpoint {} saved !'.format(epoch + 1))
 
 
 if __name__ == '__main__':

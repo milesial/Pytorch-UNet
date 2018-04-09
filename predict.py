@@ -1,15 +1,12 @@
+import argparse
+
+import numpy
 import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
-import matplotlib.pyplot as plt
-import numpy
-from PIL import Image
-import argparse
-import os
-
-from utils import *
 
 from unet import UNet
+from utils import *
 
 
 def predict_img(net, full_img, gpu=False):
@@ -50,7 +47,7 @@ if __name__ == "__main__":
     parser.add_argument('--model', '-m', default='MODEL.pth',
                         metavar='FILE',
                         help="Specify the file in which is stored the model"
-                        " (default : 'MODEL.pth')")
+                             " (default : 'MODEL.pth')")
     parser.add_argument('--input', '-i', metavar='INPUT', nargs='+',
                         help='filenames of input images', required=True)
     parser.add_argument('--output', '-o', metavar='INPUT', nargs='+',

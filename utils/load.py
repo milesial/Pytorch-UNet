@@ -1,13 +1,13 @@
-
 #
 # load.py : utils on generators / lists of ids to transform from strings to
 #           cropped images and masks
 
 import os
-import numpy as np
-
-from PIL import Image
 from functools import partial
+
+import numpy as np
+from PIL import Image
+
 from .utils import resize_and_crop, get_square, normalize
 
 
@@ -40,6 +40,7 @@ def get_imgs_and_masks(ids, dir_img, dir_mask):
     masks = to_cropped_imgs(ids, dir_mask, '_mask.gif')
 
     return zip(imgs_normalized, masks)
+
 
 def get_full_img_and_mask(id, dir_img, dir_mask):
     im = Image.open(dir_img + id + '.jpg')

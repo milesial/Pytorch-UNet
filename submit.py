@@ -1,17 +1,14 @@
 # used to predict all test images and encode results in a csv file
 
-import os
-from PIL import Image
 from predict import *
-from utils import encode
 from unet import UNet
+
 
 def submit(net, gpu=False):
     dir = 'data/test/'
 
     N = len(list(os.listdir(dir)))
     with open('SUBMISSION.csv', 'a') as f:
-
         f.write('img,rle_mask\n')
         for index, i in enumerate(os.listdir(dir)):
             print('{}/{}'.format(index, N))
