@@ -19,7 +19,7 @@ To see all options:
 
 To predict a single image and save it:
 
-`python predict.py -i image.jpg -o ouput.jpg`
+`python predict.py -i image.jpg -o output.jpg`
 
 To predict a multiple images and show them without saving them:
 

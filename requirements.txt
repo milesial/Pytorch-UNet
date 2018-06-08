@@ -1,0 +1,5 @@
+matplotlib
+pydensecrf
+numpy
+Pillow
+torch
