@@ -1,10 +1,15 @@
-# used to predict all test images and encode results in a csv file
+import os
+from PIL import Image
 
-from predict import *
+import torch
+
+from predict import predict_img
+from utils import rle_encode
 from unet import UNet
 
 
 def submit(net, gpu=False):
+    """Used for Kaggle submission: predicts and encode all test images"""
     dir = 'data/test/'
 
     N = len(list(os.listdir(dir)))

@@ -1,55 +1,25 @@
-import matplotlib.pyplot as plt
-import numpy as np
 import torch
 import torch.nn.functional as F
-from torch.autograd import Variable
 
-from myloss import dice_coeff
-from utils import dense_crf
+from dice_loss import dice_coeff
 
 
 def eval_net(net, dataset, gpu=False):
+    """Evaluation without the densecrf with the dice coefficient"""
     tot = 0
     for i, b in enumerate(dataset):
-        X = b[0]
-        y = b[1]
+        img = b[0]
+        true_mask = b[1]
 
-        X = torch.FloatTensor(X).unsqueeze(0)
-        y = torch.ByteTensor(y).unsqueeze(0)
+        img = torch.from_numpy(img).unsqueeze(0)
+        true_mask = torch.from_numpy(true_mask).unsqueeze(0)
 
         if gpu:
-            X = Variable(X, volatile=True).cuda()
-            y = Variable(y, volatile=True).cuda()
-        else:
-            X = Variable(X, volatile=True)
-            y = Variable(y, volatile=True)
+            img = img.cuda()
+            true_mask = true_mask.cuda()
 
-        y_pred = net(X)
+        mask_pred = net(img)[0]
+        mask_pred = (F.sigmoid(mask_pred) > 0.5).float()
 
-        y_pred = (F.sigmoid(y_pred) > 0.6).float()
-        # y_pred = F.sigmoid(y_pred).float()
-
-        dice = dice_coeff(y_pred, y.float()).data[0]
-        tot += dice
-
-        if 0:
-            X = X.data.squeeze(0).cpu().numpy()
-            X = np.transpose(X, axes=[1, 2, 0])
-            y = y.data.squeeze(0).cpu().numpy()
-            y_pred = y_pred.data.squeeze(0).squeeze(0).cpu().numpy()
-            print(y_pred.shape)
-
-            fig = plt.figure()
-            ax1 = fig.add_subplot(1, 4, 1)
-            ax1.imshow(X)
-            ax2 = fig.add_subplot(1, 4, 2)
-            ax2.imshow(y)
-            ax3 = fig.add_subplot(1, 4, 3)
-            ax3.imshow((y_pred > 0.5))
-
-            Q = dense_crf(((X * 255).round()).astype(np.uint8), y_pred)
-            ax4 = fig.add_subplot(1, 4, 4)
-            print(Q)
-            ax4.imshow(Q > 0.5)
-            plt.show()
+        tot += dice_coeff(mask_pred, true_mask).item()
     return tot / i

@@ -1,17 +1,12 @@
-#
-# myloss.py : implementation of the Dice coeff and the associated loss
-#
-
 import torch
 from torch.autograd import Function, Variable
-
 
 class DiceCoeff(Function):
     """Dice coeff for individual examples"""
 
     def forward(self, input, target):
         self.save_for_backward(input, target)
-        self.inter = torch.dot(input, target) + 0.0001
+        self.inter = torch.dot(input.view(-1), target.view(-1)) + 0.0001
         self.union = torch.sum(input) + torch.sum(target) + 0.0001
 
         t = 2 * self.inter.float() / self.union.float()
@@ -35,9 +30,9 @@ class DiceCoeff(Function):
 def dice_coeff(input, target):
     """Dice coeff for batches"""
     if input.is_cuda:
-        s = Variable(torch.FloatTensor(1).cuda().zero_())
+        s = torch.FloatTensor(1).cuda().zero_()
     else:
-        s = Variable(torch.FloatTensor(1).zero_())
+        s = torch.FloatTensor(1).zero_()
 
     for i, c in enumerate(zip(input, target)):
         s = s + DiceCoeff().forward(c[0], c[1])

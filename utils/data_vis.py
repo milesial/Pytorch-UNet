@@ -1,13 +1,12 @@
 import matplotlib.pyplot as plt
 
-
-def plot_img_mask(img, mask):
+def plot_img_and_mask(img, mask):
     fig = plt.figure()
+    a = fig.add_subplot(1, 2, 1)
+    a.set_title('Input image')
+    plt.imshow(img)
 
-    ax1 = fig.add_subplot(1, 3, 1)
-    ax1.imshow(img)
-
-    ax2 = fig.add_subplot(1, 3, 2)
-    ax2.imshow(mask)
-
+    b = fig.add_subplot(1, 2, 2)
+    b.set_title('Output mask')
+    plt.imshow(mask)
     plt.show()

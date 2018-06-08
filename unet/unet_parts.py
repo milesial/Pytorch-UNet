@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 # sub-parts of the U-Net model
 
 import torch
@@ -53,9 +51,9 @@ class up(nn.Module):
         super(up, self).__init__()
 
         #  would be a nice idea if the upsampling could be learned too,
-        #  but my machine do not have enough memory to handle all those weights
+        #  but my machine do not have enough memory to handle all those weights
         if bilinear:
-            self.up = nn.UpsamplingBilinear2d(scale_factor=2)
+            self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
         else:
             self.up = nn.ConvTranspose2d(in_ch//2, in_ch//2, 2, stride=2)
 

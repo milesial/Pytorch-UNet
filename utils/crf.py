@@ -1,7 +1,6 @@
 import numpy as np
 import pydensecrf.densecrf as dcrf
 
-
 def dense_crf(img, output_probs):
     h = output_probs.shape[0]
     w = output_probs.shape[1]
