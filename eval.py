@@ -22,4 +22,4 @@ def eval_net(net, dataset, gpu=False):
         mask_pred = (F.sigmoid(mask_pred) > 0.5).float()
 
         tot += dice_coeff(mask_pred, true_mask).item()
-    return tot / i
+    return tot / (i + 0.00001)

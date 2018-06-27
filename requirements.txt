@@ -3,4 +3,3 @@ pydensecrf
 numpy
 Pillow
 torch
-torchvision

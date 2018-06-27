@@ -11,7 +11,6 @@ from unet import UNet
 from utils import resize_and_crop, normalize, split_img_into_squares, hwc_to_chw, merge_masks, dense_crf
 from utils import plot_img_and_mask
 
-from torchvision import transforms
 
 def predict_img(net,
                 full_img,
@@ -33,7 +32,7 @@ def predict_img(net,
 
     X_left = torch.from_numpy(left_square).unsqueeze(0)
     X_right = torch.from_numpy(right_square).unsqueeze(0)
-    
+
     if use_gpu:
         X_left = X_left.cuda()
         X_right = X_right.cuda()
@@ -41,28 +40,21 @@ def predict_img(net,
     with torch.no_grad():
         output_left = net(X_left)
         output_right = net(X_right)
-
-        left_probs = F.sigmoid(output_left).squeeze(0)
-        right_probs = F.sigmoid(output_right).squeeze(0)
-
-        tf = transforms.Compose(
-            [
-                transforms.ToPILImage(),
-                transforms.Resize(img_height),
-                transforms.ToTensor()
-            ]
-        )
         
-        left_probs = tf(left_probs.cpu())
-        right_probs = tf(right_probs.cpu())
+        left_probs = F.sigmoid(output_left)
+        right_probs = F.sigmoid(output_right)
+
+        left_probs = F.upsample(left_probs, size=(img_height, img_height))
+        right_probs = F.upsample(right_probs, size=(img_height, img_height))
 
         left_mask_np = left_probs.squeeze().cpu().numpy()
         right_mask_np = right_probs.squeeze().cpu().numpy()
-
-    full_mask = merge_masks(left_mask_np, right_mask_np, img_width)
-
-    if use_dense_crf:
-        full_mask = dense_crf(np.array(full_img).astype(np.uint8), full_mask)
+        
+    full_mask = np.zeros((left_mask_np.shape[0],full_img.size[1],full_img.size[0]))
+    for c in range(full_mask.shape[0]):
+        full_mask[c] = merge_masks(left_mask_np[c], right_mask_np[c], img_width)
+        #if use_dense_crf:
+            #full_mask = dense_crf(np.array(full_img).astype(np.uint8), full_mask[c])
 
     return full_mask > out_threshold
 
@@ -76,7 +68,6 @@ def get_args():
                              " (default : 'MODEL.pth')")
     parser.add_argument('--input', '-i', metavar='INPUT', nargs='+',
                         help='filenames of input images', required=True)
-
     parser.add_argument('--output', '-o', metavar='INPUT', nargs='+',
                         help='filenames of ouput images')
     parser.add_argument('--cpu', '-c', action='store_true',
@@ -122,9 +113,7 @@ def mask_to_image(mask):
 if __name__ == "__main__":
     args = get_args()
     in_files = args.input
-    out_files = get_output_filenames(args)
-
-    net = UNet(n_channels=3, n_classes=1)
+    net = UNet(n_channels=3, n_classes=3)
 
     print("Loading model {}".format(args.model))
 
@@ -153,13 +142,15 @@ if __name__ == "__main__":
                            use_dense_crf= not args.no_crf,
                            use_gpu=not args.cpu)
 
+        print mask.shape
+        
         if args.viz:
             print("Visualizing results for image {}, close to continue ...".format(fn))
             plot_img_and_mask(img, mask)
 
         if not args.no_save:
-            out_fn = out_files[i]
-            result = mask_to_image(mask)
-            result.save(out_files[i])
+            for i in range(3):
+                result = mask_to_image(mask[i])
+                filename = str(i)+".png"
+                result.save(filename)
 
-            print("Mask saved to {}".format(out_files[i]))
