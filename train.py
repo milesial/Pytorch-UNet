@@ -147,7 +147,7 @@ if __name__ == '__main__':
                   batch_size=args.batchsize,
                   lr=args.lr,
                   gpu=args.gpu,
-                  img_scale=args.scale
+                  img_scale=args.scale,
                   class_mark=args.class_mark)
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')
