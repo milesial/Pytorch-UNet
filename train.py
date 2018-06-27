@@ -20,14 +20,16 @@ def train_net(net,
               val_percent=0.05,
               save_cp=True,
               gpu=False,
-              img_scale=1):
+              img_scale=(1024,1024),
+            #"background","class1","class2","class3"
+              class_mark = [0,1,2,3]
+              ):
 
     dir_img = 'data/train/'
     dir_mask = 'data/train_masks/'
     dir_checkpoint = 'checkpoints/'
-    #"background","class1","class2","class3"
-    class_mark = [0,1,2,3]
-    
+   
+
     ids = get_ids(dir_img)
     ids = split_ids(ids)
 
@@ -56,13 +58,14 @@ def train_net(net,
 
     criterion = nn.BCELoss()
     
+    
+
     # reset the generators
     # train[(image1,mask1),(image2,mask2),...]
-    train = get_full_img_and_mask(iddataset['train'], dir_img, dir_mask,'.png','_.png',(1024,1024))
-    print ('train set process done.')
-    val = get_full_img_and_mask(iddataset['val'], dir_img, dir_mask,'.png','_.png',(1024,1024))
-    print ('validation set process done.')
-    
+    train = get_full_img_and_mask(iddataset['train'], dir_img, dir_mask,'.png','_.png',img_scale)
+    val = get_full_img_and_mask(iddataset['val'], dir_img, dir_mask,'.png','_.png',img_scale)
+ 
+        
     for epoch in range(epochs):
         print('Starting epoch {}/{}.'.format(epoch + 1, epochs))
         epoch_loss = 0
@@ -86,7 +89,6 @@ def train_net(net,
             masks_probs = F.sigmoid(masks_pred)
             masks_probs_flat = masks_probs.view(-1)
 
-            print "-------------------------------"
             true_masks_flat = true_masks.view(-1)
             loss = criterion(masks_probs_flat, true_masks_flat)
             epoch_loss += loss.item()
@@ -116,12 +118,13 @@ def get_args():
     parser.add_option('-l', '--learning-rate', dest='lr', default=0.001,
                       type='float', help='learning rate')
     parser.add_option('-g', '--gpu', action='store_true', dest='gpu',
-                      default=True, help='use cuda')
+                      default= False, help='use cuda')
     parser.add_option('-c', '--load', dest='load',
                       default=False, help='load file model')
-    parser.add_option('-s', '--scale', dest='scale', type='float',
-                      default=1, help='downscaling factor of the images')
-
+    parser.add_option('-s', '--scale', dest='scale', 
+                      default=(1024,1024), help='target size')
+    parser.add_option('-a', '--class', dest='class_mark',
+                      default=[0,1,2,3], help='intensity in mask image')
     (options, args) = parser.parse_args()
     return options
 
@@ -144,7 +147,8 @@ if __name__ == '__main__':
                   batch_size=args.batchsize,
                   lr=args.lr,
                   gpu=args.gpu,
-                  img_scale=args.scale)
+                  img_scale=args.scale
+                  class_mark=args.class_mark)
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')
         print('Saved interrupt')
