@@ -85,10 +85,10 @@ def get_args():
     parser.add_argument('--viz', '-v', action='store_true',
                         help="Visualize the images as they are processed",
                         default=False)
-    parser.add_argument('--no-save', '-n', action='store_false',
+    parser.add_argument('--no-save', '-n', action='store_true',
                         help="Do not save the output masks",
                         default=False)
-    parser.add_argument('--no-crf', '-r', action='store_false',
+    parser.add_argument('--no-crf', '-r', action='store_true',
                         help="Do not use dense CRF postprocessing",
                         default=False)
     parser.add_argument('--mask-threshold', '-t', type=float,
