@@ -13,24 +13,29 @@ from eval import eval_net
 from unet import UNet
 from utils import get_ids, split_ids, split_train_val, get_imgs_and_masks, batch
 
+
 def train_net(net,
               epochs=5,
-              batch_size=1,
+              batch_size=32,
               lr=0.1,
               val_percent=0.05,
               save_cp=True,
               gpu=False,
               img_scale=0.5):
 
+    # Location of the images to use
     dir_img = 'data/train/'
-    dir_mask = 'data/train_masks/'
+    dir_gt = 'data/gt/'
     dir_checkpoint = 'checkpoints/'
 
-    ids = get_ids(dir_img)
-    ids = split_ids(ids)
-
-    iddataset = split_train_val(ids, val_percent)
-
+    # Get the name of the train images 
+    imgs_ids = get_ids(dir_img)
+    # TODO: eliminate this ids = split_ids(ids)
+    # Separate the train dataset in training and validation, use a dictionary
+    data_train = split_train_val(imgs_ids, val_percent)
+    samples_train_amount = len(data_train['train'])
+    
+    # Pretty print of the run
     print('''
     Starting training:
         Epochs: {}
@@ -40,24 +45,28 @@ def train_net(net,
         Validation size: {}
         Checkpoints: {}
         CUDA: {}
-    '''.format(epochs, batch_size, lr, len(iddataset['train']),
-               len(iddataset['val']), str(save_cp), str(gpu)))
+    '''.format(epochs, batch_size, lr, len(data_train['train']),
+               len(data_train['val']), str(save_cp), str(gpu)))
 
-    N_train = len(iddataset['train'])
-
+    
+    # Definition of the optimizer
     optimizer = optim.SGD(net.parameters(),
                           lr=lr,
                           momentum=0.9,
                           weight_decay=0.0005)
 
+    # Definition of the loss function
     criterion = nn.BCELoss()
 
+    # Actual training
     for epoch in range(epochs):
         print('Starting epoch {}/{}.'.format(epoch + 1, epochs))
 
         # reset the generators
-        train = get_imgs_and_masks(iddataset['train'], dir_img, dir_mask, img_scale)
-        val = get_imgs_and_masks(iddataset['val'], dir_img, dir_mask, img_scale)
+        train = get_imgs_and_masks(
+            data_train['train'], dir_img, dir_gt, img_scale)
+        val = get_imgs_and_masks(
+            data_train['val'], dir_img, dir_gt, img_scale)
 
         epoch_loss = 0
 
@@ -81,7 +90,8 @@ def train_net(net,
             loss = criterion(masks_probs_flat, true_masks_flat)
             epoch_loss += loss.item()
 
-            print('{0:.4f} --- loss: {1:.6f}'.format(i * batch_size / N_train, loss.item()))
+            print('{0:.4f} --- loss: {1:.6f}'.format(i *
+                                                     batch_size / samples_train_amount, loss.item()))
 
             optimizer.zero_grad()
             loss.backward()
@@ -89,7 +99,7 @@ def train_net(net,
 
         print('Epoch finished ! Loss: {}'.format(epoch_loss / i))
 
-        if 1:
+        if val_percent != 0.0:
             val_dice = eval_net(net, val, gpu)
             print('Validation Dice Coeff: {}'.format(val_dice))
 
@@ -97,7 +107,6 @@ def train_net(net,
             torch.save(net.state_dict(),
                        dir_checkpoint + 'CP{}.pth'.format(epoch + 1))
             print('Checkpoint {} saved !'.format(epoch + 1))
-
 
 
 def get_args():
@@ -117,6 +126,7 @@ def get_args():
 
     (options, args) = parser.parse_args()
     return options
+
 
 if __name__ == '__main__':
     args = get_args()
