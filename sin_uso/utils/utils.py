@@ -31,17 +31,25 @@ def resize_and_crop(pilimg, scale=0.5, final_height=None):
     img = img.crop((0, diff // 2, newW, newH - diff // 2))
     return np.array(img, dtype=np.float32)
 
-def batch(iterable, batch_size):
-    """Yields lists by batch"""
-    b = []
-    for i, t in enumerate(iterable):
-        b.append(t)
-        if (i + 1) % batch_size == 0:
-            yield b
-            b = []
+def random_samples(imgs, gt):
+    ''' Randomize the dataset. '''
+    
+    temp = list(zip(imgs, gt))
+    random.shuffle(temp)
+    imgs, gt = zip(*temp)
+    return imgs, gt
 
-    if len(b) > 0:
-        yield b
+def batch(imgs, gt, batch_size):
+    ''' Creates a list of images batches '''
+    num_batches = round(len(imgs)/batch_size)
+    b_img = [[] for i in range(num_batches)]
+    b_gt = [[] for i in range(num_batches)]
+    for ind in range(len(imgs)):
+        batch = ind % num_batches
+        b_img[batch].append(imgs[ind])
+        b_gt[batch].append(gt[ind])
+    return b_img, b_gt
+
 
 def split_train_val(dataset, val_percent=0.05):
     dataset = list(dataset)
@@ -51,8 +59,6 @@ def split_train_val(dataset, val_percent=0.05):
     return {'train': dataset[:-n], 'val': dataset[-n:]}
 
 
-def normalize(x):
-    return x / 255
 
 def merge_masks(img1, img2, full_w):
     h = img1.shape[0]

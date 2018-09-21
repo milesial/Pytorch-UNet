@@ -4,109 +4,83 @@ from optparse import OptionParser
 import numpy as np
 
 import torch
-import torch.backends.cudnn as cudnn
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import optim
 
-from eval import eval_net
 from unet import UNet
-from utils import get_ids, split_ids, split_train_val, get_imgs_and_masks, batch
+from loader import get_dataloaders
 
 
-def train_net(net,
-              epochs=5,
-              batch_size=32,
-              lr=0.1,
-              val_percent=0.05,
-              save_cp=True,
-              gpu=False,
-              img_scale=0.5):
-
-    # Location of the images to use
-    dir_img = 'data/train/'
-    dir_gt = 'data/gt/'
-    dir_checkpoint = 'checkpoints/'
-
-    # Get the name of the train images 
-    imgs_ids = get_ids(dir_img)
-    # TODO: eliminate this ids = split_ids(ids)
-    # Separate the train dataset in training and validation, use a dictionary
-    data_train = split_train_val(imgs_ids, val_percent)
-    samples_train_amount = len(data_train['train'])
-    
-    # Pretty print of the run
-    print('''
-    Starting training:
-        Epochs: {}
-        Batch size: {}
-        Learning rate: {}
-        Training size: {}
-        Validation size: {}
-        Checkpoints: {}
-        CUDA: {}
-    '''.format(epochs, batch_size, lr, len(data_train['train']),
-               len(data_train['val']), str(save_cp), str(gpu)))
-
-    
-    # Definition of the optimizer
-    optimizer = optim.SGD(net.parameters(),
-                          lr=lr,
-                          momentum=0.9,
-                          weight_decay=0.0005)
-
-    # Definition of the loss function
-    criterion = nn.BCELoss()
-
-    # Actual training
+def train_net(net, device, loader, dir_checkpoint, epochs=5):
+    ''' Train the CNN. '''
     for epoch in range(epochs):
         print('Starting epoch {}/{}.'.format(epoch + 1, epochs))
 
-        # reset the generators
-        train = get_imgs_and_masks(
-            data_train['train'], dir_img, dir_gt, img_scale)
-        val = get_imgs_and_masks(
-            data_train['val'], dir_img, dir_gt, img_scale)
+        net.train()
+        train_loss = 0
+        for batch_idx, (data, gt) in enumerate(loader):
 
-        epoch_loss = 0
-
-        for i, b in enumerate(batch(train, batch_size)):
-            imgs = np.array([i[0] for i in b]).astype(np.float32)
-            true_masks = np.array([i[1] for i in b])
-
-            imgs = torch.from_numpy(imgs)
-            true_masks = torch.from_numpy(true_masks)
-
-            if gpu:
-                imgs = imgs.cuda()
-                true_masks = true_masks.cuda()
-
-            masks_pred = net(imgs)
-            masks_probs = F.sigmoid(masks_pred)
-            masks_probs_flat = masks_probs.view(-1)
-
-            true_masks_flat = true_masks.view(-1)
-
-            loss = criterion(masks_probs_flat, true_masks_flat)
-            epoch_loss += loss.item()
-
-            print('{0:.4f} --- loss: {1:.6f}'.format(i *
-                                                     batch_size / samples_train_amount, loss.item()))
+            # Use GPU or not
+            data, gt = data.to(device), gt.to(device)
 
             optimizer.zero_grad()
+
+            # Forward
+            predictions = net(data)
+
+            # To calculate Loss
+            pred_probs = F.sigmoid(predictions)
+            pred_probs_flat = pred_probs.view(-1)
+            gt_flat = gt.view(-1)
+
+            # Loss Calculation
+            loss = criterion(pred_probs_flat, gt_flat)
+            train_loss += loss.item()
+
+            # Backpropagation
             loss.backward()
             optimizer.step()
 
-        print('Epoch finished ! Loss: {}'.format(epoch_loss / i))
+            print('{0:.4f} --- Training Loss: {1:.6f}'.format(100. *
+                                                              batch_idx / len(train_loader), loss.item()))
 
-        if val_percent != 0.0:
-            val_dice = eval_net(net, val, gpu)
-            print('Validation Dice Coeff: {}'.format(val_dice))
+        torch.save(net.state_dict(), dir_checkpoint +
+                   'CP{}.pth'.format(epoch + 1))
+        print('Checkpoint {} saved !'.format(epoch + 1))
 
-        if save_cp:
-            torch.save(net.state_dict(),
-                       dir_checkpoint + 'CP{}.pth'.format(epoch + 1))
-            print('Checkpoint {} saved !'.format(epoch + 1))
+
+def test_net(net, device, loader):
+    ''' Test the CNN '''
+    net.eval()
+    test_loss = 0
+    correct = 0
+    with torch.no_grad():
+        for data, gt in loader:
+
+            # Use GPU or not
+            data, gt = data.to(device), gt.to(device)
+
+            # Forward
+            predictions = net(data)
+
+            # To calculate Loss
+            pred_probs = F.sigmoid(predictions)
+            pred_probs_flat = pred_probs.view(-1)
+            gt_flat = gt.view(-1)
+
+            # Loss Calculation
+            loss = criterion(pred_probs_flat, gt_flat)
+            test_loss += loss.item()
+
+            # get the index of the max log-probability
+            pred = predictions.max(1, keepdim=True)[1]
+            correct += pred.eq(gt.view_as(pred)).sum().item()
+
+    test_loss /= len(test_loader.dataset)
+    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+        test_loss, correct, len(test_loader.dataset),
+        100. * correct / len(test_loader.dataset)))
 
 
 def get_args():
@@ -117,8 +91,8 @@ def get_args():
                       type='int', help='batch size')
     parser.add_option('-l', '--learning-rate', dest='lr', default=0.1,
                       type='float', help='learning rate')
-    parser.add_option('-g', '--gpu', action='store_true', dest='gpu',
-                      default=False, help='use cuda')
+    parser.add_option('-t', '--test-percentage', type='float', dest='testperc',
+                      default=0.2, help='Test percentage')
     parser.add_option('-c', '--load', dest='load',
                       default=False, help='load file model')
     parser.add_option('-s', '--scale', dest='scale', type='float',
@@ -131,23 +105,57 @@ def get_args():
 if __name__ == '__main__':
     args = get_args()
 
-    net = UNet(n_channels=3, n_classes=1)
-
+    # Load old weights
     if args.load:
         net.load_state_dict(torch.load(args.load))
         print('Model loaded from {}'.format(args.load))
 
-    if args.gpu:
-        net.cuda()
-        # cudnn.benchmark = True # faster convolutions, but more memory
+    # Use GPU or not
+    use_cuda = torch.cuda.is_available()
+    device = torch.device("cuda" if use_cuda else "cpu")
+    kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
+    # Create the model
+    net = UNet(n_channels=3, n_classes=1).to(device)
+
+    # Location of the images to use
+    dir_img = 'data/train/'
+    dir_gt = 'data/gt/'
+    dir_checkpoint = 'checkpoints/'
+
+    # Load the dataset
+    train_loader, test_loader = get_dataloaders(
+        dir_img, dir_gt, args.testperc, args.batchsize)
+
+    # Pretty print of the run
+    print('''
+    Starting training:
+        Epochs: {}
+        Batch size: {}
+        Learning rate: {}
+        Training size: {}
+        Testing size: {}
+        CUDA: {}
+    '''.format(args.epochs, args.batchsize, args.lr, len(train_loader.dataset),
+               len(test_loader.dataset), str(use_cuda)))
+
+    # Definition of the optimizer
+    optimizer = optim.SGD(net.parameters(),
+                          lr=args.lr,
+                          momentum=0.9,
+                          weight_decay=0.0005)
+
+    # Definition of the loss function
+    criterion = nn.BCELoss()
+
+    # Run the training and testing
     try:
         train_net(net=net,
                   epochs=args.epochs,
-                  batch_size=args.batchsize,
-                  lr=args.lr,
-                  gpu=args.gpu,
-                  img_scale=args.scale)
+                  device=device,
+                  dir_checkpoint=dir_checkpoint,
+                  loader=train_loader)
+        test_net(net=net, device=device, loader=test_loader)
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')
         print('Saved interrupt')
