@@ -30,7 +30,7 @@ class BBBCDataset(Dataset):
         id_gt = self.dir_gt + self.ids[index] + self.gt_label + self.extension
         # Open Image and GroundTruth
         img = np.array(cv2.imread(id_img)).astype(np.float32)
-        gt = np.array(cv2.imread(id_gt)).astype(np.float32)
+        gt = np.array(cv2.imread(id_gt,0)).astype(np.float32)
 
         # Applies transformations
         img = self.transformations(img)

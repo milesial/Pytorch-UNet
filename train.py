@@ -12,7 +12,7 @@ from unet import UNet
 from loader import get_dataloaders
 
 
-def train_net(net, device, loader, dir_checkpoint, epochs=5):
+def train_net(net, device, loader, dir_checkpoint,optimizer, criterion,epochs=5):
     ''' Train the CNN. '''
     for epoch in range(epochs):
         print('Starting epoch {}/{}.'.format(epoch + 1, epochs))
@@ -30,7 +30,7 @@ def train_net(net, device, loader, dir_checkpoint, epochs=5):
             predictions = net(data)
 
             # To calculate Loss
-            pred_probs = F.sigmoid(predictions)
+            pred_probs = torch.sigmoid(predictions)
             pred_probs_flat = pred_probs.view(-1)
             gt_flat = gt.view(-1)
 
@@ -43,14 +43,14 @@ def train_net(net, device, loader, dir_checkpoint, epochs=5):
             optimizer.step()
 
             print('{0:.4f} --- Training Loss: {1:.6f}'.format(100. *
-                                                              batch_idx / len(train_loader), loss.item()))
+                                                              batch_idx / len(loader), loss.item()))
 
         torch.save(net.state_dict(), dir_checkpoint +
                    'CP{}.pth'.format(epoch + 1))
-        print('Checkpoint {} saved !'.format(epoch + 1))
+        print('{} Checkpoint for weights saved !'.format(epoch + 1))
 
 
-def test_net(net, device, loader):
+def test_net(net, device, loader, criterion):
     ''' Test the CNN '''
     net.eval()
     test_loss = 0
@@ -65,7 +65,7 @@ def test_net(net, device, loader):
             predictions = net(data)
 
             # To calculate Loss
-            pred_probs = F.sigmoid(predictions)
+            pred_probs = torch.sigmoid(predictions)
             pred_probs_flat = pred_probs.view(-1)
             gt_flat = gt.view(-1)
 
@@ -73,15 +73,73 @@ def test_net(net, device, loader):
             loss = criterion(pred_probs_flat, gt_flat)
             test_loss += loss.item()
 
-            # get the index of the max log-probability
-            pred = predictions.max(1, keepdim=True)[1]
-            correct += pred.eq(gt.view_as(pred)).sum().item()
+    test_loss /= len(loader.dataset)
+    print('\nTest set: Average loss: {:.4f}'.format(test_loss))
 
-    test_loss /= len(test_loader.dataset)
-    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-        test_loss, correct, len(test_loader.dataset),
-        100. * correct / len(test_loader.dataset)))
 
+def setup_and_run(load = False, test_perc = 0.2, batch_size = 10,
+                epochs = 5, lr = 0.1):
+    
+    # Use GPU or not
+    use_cuda = torch.cuda.is_available()
+    device = torch.device("cuda" if use_cuda else "cpu")
+    kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
+
+    # Create the model
+    net = UNet(n_channels=3, n_classes=1).to(device)
+
+    # Load old weights
+    if load:
+        net.load_state_dict(torch.load(load))
+        print('Model loaded from {}'.format(load))
+
+    # Location of the images to use
+    dir_img = 'data/train/'
+    dir_gt = 'data/gt/'
+    dir_checkpoint = 'checkpoints/'
+
+    # Load the dataset
+    train_loader, test_loader = get_dataloaders(
+        dir_img, dir_gt, test_perc, batch_size)
+
+    # Pretty print of the run
+    print('''
+    Starting training:
+        Epochs: {}
+        Batch size: {}
+        Learning rate: {}
+        Training size: {}
+        Testing size: {}
+        CUDA: {}
+    '''.format(epochs, batch_size, lr, len(train_loader.dataset),
+               len(test_loader.dataset), str(use_cuda)))
+
+    # Definition of the optimizer
+    optimizer = optim.SGD(net.parameters(),
+                          lr=lr,
+                          momentum=0.9,
+                          weight_decay=0.0005)
+
+    # Definition of the loss function
+    criterion = nn.BCELoss()
+
+    # Run the training and testing
+    try:
+        train_net(net=net,
+                  epochs=epochs,
+                  device=device,
+                  dir_checkpoint=dir_checkpoint,
+                  loader=train_loader,
+                  optimizer=optimizer,
+                  criterion=criterion)
+        test_net(net=net, device=device, loader=test_loader, criterion=criterion)
+    except KeyboardInterrupt:
+        torch.save(net.state_dict(), 'INTERRUPTED.pth')
+        print('Saved interrupt')
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)
 
 def get_args():
     parser = OptionParser()
@@ -104,62 +162,10 @@ def get_args():
 
 if __name__ == '__main__':
     args = get_args()
+    setup_and_run(load = args.load,
+                  test_perc = args.testperc,
+                  batch_size = args.batchsize,
+                  epochs = args.epochs,
+                  lr = args.lr
+    )
 
-    # Load old weights
-    if args.load:
-        net.load_state_dict(torch.load(args.load))
-        print('Model loaded from {}'.format(args.load))
-
-    # Use GPU or not
-    use_cuda = torch.cuda.is_available()
-    device = torch.device("cuda" if use_cuda else "cpu")
-    kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
-
-    # Create the model
-    net = UNet(n_channels=3, n_classes=1).to(device)
-
-    # Location of the images to use
-    dir_img = 'data/train/'
-    dir_gt = 'data/gt/'
-    dir_checkpoint = 'checkpoints/'
-
-    # Load the dataset
-    train_loader, test_loader = get_dataloaders(
-        dir_img, dir_gt, args.testperc, args.batchsize)
-
-    # Pretty print of the run
-    print('''
-    Starting training:
-        Epochs: {}
-        Batch size: {}
-        Learning rate: {}
-        Training size: {}
-        Testing size: {}
-        CUDA: {}
-    '''.format(args.epochs, args.batchsize, args.lr, len(train_loader.dataset),
-               len(test_loader.dataset), str(use_cuda)))
-
-    # Definition of the optimizer
-    optimizer = optim.SGD(net.parameters(),
-                          lr=args.lr,
-                          momentum=0.9,
-                          weight_decay=0.0005)
-
-    # Definition of the loss function
-    criterion = nn.BCELoss()
-
-    # Run the training and testing
-    try:
-        train_net(net=net,
-                  epochs=args.epochs,
-                  device=device,
-                  dir_checkpoint=dir_checkpoint,
-                  loader=train_loader)
-        test_net(net=net, device=device, loader=test_loader)
-    except KeyboardInterrupt:
-        torch.save(net.state_dict(), 'INTERRUPTED.pth')
-        print('Saved interrupt')
-        try:
-            sys.exit(0)
-        except SystemExit:
-            os._exit(0)

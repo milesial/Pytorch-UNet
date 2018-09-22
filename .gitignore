@@ -3,5 +3,5 @@ data/
 __pycache__/
 checkpoints/
 *.pth
-*.jpg
+*.png
 SUBMISSION*
