@@ -54,7 +54,6 @@ def test_net(net, device, loader, criterion):
     ''' Test the CNN '''
     net.eval()
     test_loss = 0
-    correct = 0
     with torch.no_grad():
         for data, gt in loader:
 
@@ -83,7 +82,6 @@ def setup_and_run(load = False, test_perc = 0.2, batch_size = 10,
     # Use GPU or not
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
-    kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
     # Create the model
     net = UNet(n_channels=3, n_classes=1).to(device)
