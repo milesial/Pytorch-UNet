@@ -33,7 +33,7 @@ def train_net(net, device, loader, dir_checkpoint,optimizer, criterion,epochs=5)
             pred_probs = torch.sigmoid(predictions)
             pred_probs_flat = pred_probs.view(-1)
             gt_flat = gt.view(-1)
-
+            
             # Loss Calculation
             loss = criterion(pred_probs_flat, gt_flat)
             train_loss += loss.item()
