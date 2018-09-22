@@ -12,7 +12,7 @@ class UNet(nn.Module):
         self.down2 = down(128, 256)
         self.down3 = down(256, 512)
         self.down4 = down(512, 512)
-        #self.up1 = up(1024, 256)      # TODO: Use or not the bilinear option
+        # TODO: Use or not the bilinear option
         self.up1 = up(1024, 256)
         self.up2 = up(512, 128)
         self.up3 = up(256, 64)
