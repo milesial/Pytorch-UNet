@@ -6,6 +6,7 @@ from dice_loss import dice_coeff
 
 def eval_net(net, dataset, gpu=False):
     """Evaluation without the densecrf with the dice coefficient"""
+    net.eval()
     tot = 0
     for i, b in enumerate(dataset):
         img = b[0]
