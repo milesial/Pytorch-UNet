@@ -20,6 +20,7 @@ def predict_img(net,
                 use_dense_crf=True,
                 use_gpu=False):
 
+    net.eval()
     img_height = full_img.size[1]
     img_width = full_img.size[0]
 
