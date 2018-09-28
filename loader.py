@@ -1,22 +1,26 @@
 from torch.utils.data.dataset import Dataset
 from torch.utils.data import DataLoader
 from torchvision import transforms
-import cv2
+from PIL import Image
 import numpy as np
 import os
 import random
 
 
 class BBBCDataset(Dataset):
-    def __init__(self, ids, dir_data, dir_gt, extension='.png', gt_label='_mask'):
+    def __init__(self, ids, dir_data, dir_gt, extension='.png', gt_label='_mask', is_pred=False):
 
         self.dir_data = dir_data
         self.dir_gt = dir_gt
         self.extension = extension
         self.gt_label = gt_label
 
+        self.is_pred = is_pred
+
         # Transforms
-        self.transformations = transforms.Compose([transforms.ToTensor()])
+        self.transformations = transforms.Compose([
+            transforms.Grayscale(),
+            transforms.ToTensor()])
 
         # Images IDS
         self.ids = ids
@@ -29,10 +33,11 @@ class BBBCDataset(Dataset):
         id_img = self.dir_data + self.ids[index] + self.extension
         id_gt = self.dir_gt + self.ids[index] + self.gt_label + self.extension
         # Open Image and GroundTruth
-        img = np.array(cv2.imread(id_img)).astype(np.float32)
-        gt = np.array(cv2.imread(id_gt,0)).astype(np.float32)
+        img = Image.open(id_img)
+        gt = Image.open(id_gt)
         # Applies transformations
         img = self.transformations(img)
+        gt = self.transformations(gt)
 
         return (img, gt)
 
@@ -64,3 +69,22 @@ def get_dataloaders(dir_img, dir_gt, test_percent=0.2, batch_size=10):
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
     return train_loader, test_loader
+
+
+def get_predloader(dir_img):
+    ''' Returns the loader for predict images. '''
+    # Redirect folders path
+    dir_original = dir_img+"/original/"
+    dir_gt = dir_img+"/gt/"
+
+    # Read the names of the images
+    ids = [f[:-4] for f in os.listdir(dir_original)]
+
+    # Create the dataset
+    pred_dataset = BBBCDataset(
+        ids=ids, dir_data=dir_original, dir_gt=dir_gt, is_pred=True)
+
+    # Create the loader
+    pred_loader = DataLoader(pred_dataset)
+
+    return pred_loader

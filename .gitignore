@@ -2,6 +2,10 @@
 
 __pycache__/
 checkpoints/
+data/
+*.pth
+*.png
+*.tif
 *.pth
 
 SUBMISSION*

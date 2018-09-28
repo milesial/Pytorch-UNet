@@ -12,10 +12,10 @@ from unet import UNet
 from loader import get_dataloaders
 
 
-def train_net(net, device, loader, dir_checkpoint,optimizer, criterion,epochs=5):
+def train_net(net, device, loader, dir_checkpoint, optimizer, criterion, epochs=5):
     ''' Train the CNN. '''
     for epoch in range(epochs):
-        print('Starting epoch {}/{}.'.format(epoch + 1, epochs))
+        print('\nStarting epoch {}/{}.'.format(epoch + 1, epochs))
 
         net.train()
         train_loss = 0
@@ -33,7 +33,7 @@ def train_net(net, device, loader, dir_checkpoint,optimizer, criterion,epochs=5)
             pred_probs = torch.sigmoid(predictions)
             pred_probs_flat = pred_probs.view(-1)
             gt_flat = gt.view(-1)
-            
+
             # Loss Calculation
             loss = criterion(pred_probs_flat, gt_flat)
             train_loss += loss.item()
@@ -42,12 +42,17 @@ def train_net(net, device, loader, dir_checkpoint,optimizer, criterion,epochs=5)
             loss.backward()
             optimizer.step()
 
-            print('{0:.4f} --- Training Loss: {1:.6f}'.format(100. *
-                                                              batch_idx / len(loader), loss.item()))
+            print('{0:.2f}% --- Training Loss: {1:.6f}'.format(100. *
+                                                               batch_idx / len(loader), loss.item()))
+
+        train_loss /= len(loader.dataset)
+        print('\nTraining Loss: ' + str(train_loss))
 
         torch.save(net.state_dict(), dir_checkpoint +
                    'CP{}.pth'.format(epoch + 1))
         print('{} Checkpoint for weights saved !'.format(epoch + 1))
+
+    return train_loss
 
 
 def test_net(net, device, loader, criterion):
@@ -73,23 +78,25 @@ def test_net(net, device, loader, criterion):
             test_loss += loss.item()
 
     test_loss /= len(loader.dataset)
-    print('\nTest set: Average loss: {:.4f}'.format(test_loss))
+    print('\nTest set: Average loss: ' + str(test_loss))
+    return test_loss
 
 
-def setup_and_run(load = False, test_perc = 0.2, batch_size = 10,
-                epochs = 5, lr = 0.1):
-    
+def setup_and_run_train(load=False, test_perc=0.2, batch_size=10,
+                        epochs=5, lr=0.1):
+
     # Use GPU or not
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
 
     # Create the model
-    net = UNet(n_channels=3, n_classes=1).to(device)
+    net = UNet(n_channels=1, n_classes=1,
+               with_USM=True, batch_len=15).to(device)
 
     # Load old weights
     if load:
         net.load_state_dict(torch.load(load))
-        print('Model loaded from {}'.format(load))
+        save_and_print('Model loaded from {}'.format(load))
 
     # Location of the images to use
     dir_img = 'data/train/'
@@ -123,14 +130,16 @@ def setup_and_run(load = False, test_perc = 0.2, batch_size = 10,
 
     # Run the training and testing
     try:
-        train_net(net=net,
-                  epochs=epochs,
-                  device=device,
-                  dir_checkpoint=dir_checkpoint,
-                  loader=train_loader,
-                  optimizer=optimizer,
-                  criterion=criterion)
-        test_net(net=net, device=device, loader=test_loader, criterion=criterion)
+        train_loss = train_net(net=net,
+                               epochs=epochs,
+                               device=device,
+                               dir_checkpoint=dir_checkpoint,
+                               loader=train_loader,
+                               optimizer=optimizer,
+                               criterion=criterion)
+        test_loss = test_net(net=net, device=device,
+                             loader=test_loader, criterion=criterion)
+        return train_loss, test_loss
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')
         print('Saved interrupt')
@@ -138,6 +147,7 @@ def setup_and_run(load = False, test_perc = 0.2, batch_size = 10,
             sys.exit(0)
         except SystemExit:
             os._exit(0)
+
 
 def get_args():
     parser = OptionParser()
@@ -160,10 +170,9 @@ def get_args():
 
 if __name__ == '__main__':
     args = get_args()
-    setup_and_run(load = args.load,
-                  test_perc = args.testperc,
-                  batch_size = args.batchsize,
-                  epochs = args.epochs,
-                  lr = args.lr
-    )
-
+    setup_and_run_train(load=args.load,
+                        test_perc=args.testperc,
+                        batch_size=args.batchsize,
+                        epochs=args.epochs,
+                        lr=args.lr
+                        )
