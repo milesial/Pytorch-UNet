@@ -6,7 +6,6 @@ import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
-import torch.nn.functional as F
 from torch import optim
 
 from eval import eval_net
@@ -74,8 +73,7 @@ def train_net(net,
                 true_masks = true_masks.cuda()
 
             masks_pred = net(imgs)
-            masks_probs = F.sigmoid(masks_pred)
-            masks_probs_flat = masks_probs.view(-1)
+            masks_probs_flat = masks_pred.view(-1)
 
             true_masks_flat = true_masks.view(-1)
 

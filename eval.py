@@ -20,7 +20,7 @@ def eval_net(net, dataset, gpu=False):
             true_mask = true_mask.cuda()
 
         mask_pred = net(img)[0]
-        mask_pred = (F.sigmoid(mask_pred) > 0.5).float()
+        mask_pred = (mask_pred > 0.5).float()
 
         tot += dice_coeff(mask_pred, true_mask).item()
     return tot / i
