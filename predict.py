@@ -43,8 +43,8 @@ def predict_img(net,
         output_left = net(X_left)
         output_right = net(X_right)
 
-        left_probs = F.sigmoid(output_left).squeeze(0)
-        right_probs = F.sigmoid(output_right).squeeze(0)
+        left_probs = output_left.squeeze(0)
+        right_probs = output_right.squeeze(0)
 
         tf = transforms.Compose(
             [
