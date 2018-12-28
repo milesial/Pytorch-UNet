@@ -9,7 +9,7 @@ This model was trained from scratch with 5000 images (no data augmentation) and 
 The model used for the last submission is stored in the `MODEL.pth` file, if you wish to play with it. The data is available on the [Kaggle website](https://www.kaggle.com/c/carvana-image-masking-challenge/data).
 
 ## Usage
-
+**Note : Use Python 3**
 ### Prediction
 
 You can easily test the output masks on your images via the CLI.
