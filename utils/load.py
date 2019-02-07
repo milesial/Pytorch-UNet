@@ -17,7 +17,7 @@ def get_ids(dir):
 
 def split_ids(ids, n=2):
     """Split each id in n, creating n tuples (id, k) for each id"""
-    return ((id, i) for i in range(n) for id in ids)
+    return ((id, i)  for id in ids for i in range(n))
 
 
 def to_cropped_imgs(ids, dir, suffix, scale):
