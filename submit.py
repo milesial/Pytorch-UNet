@@ -1,11 +1,13 @@
+""" Submit code specific to the kaggle challenge"""
+
 import os
-from PIL import Image
 
 import torch
+from PIL import Image
 
 from predict import predict_img
-from utils import rle_encode
 from unet import UNet
+from utils import rle_encode
 
 
 def submit(net, gpu=False):
