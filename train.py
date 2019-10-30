@@ -44,7 +44,10 @@ def train_net(net,
     n_train = len(iddataset['train'])
     n_val = len(iddataset['val'])
     optimizer = optim.Adam(net.parameters(), lr=lr)
-    criterion = nn.BCELoss()
+    if net.n_classes > 1:
+        criterion = nn.CrossEntropyLoss()
+    else:
+        criterion = nn.BCEWithLogitsLoss()
 
     for epoch in range(epochs):
         net.train()
@@ -87,8 +90,12 @@ def train_net(net,
                        dir_checkpoint + f'CP_epoch{epoch + 1}.pth')
             logging.info(f'Checkpoint {epoch + 1} saved !')
 
-        val_dice = eval_net(net, val, device, n_val)
-        logging.info('Validation Dice Coeff: {}'.format(val_dice))
+        val_score = eval_net(net, val, device, n_val)
+        if net.n_classes > 1:
+            logging.info('Validation cross entropy: {}'.format(val_score))
+
+        else:
+            logging.info('Validation Dice Coeff: {}'.format(val_score))
 
 
 def get_args():
