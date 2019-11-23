@@ -10,8 +10,7 @@ import torch.nn.functional as F
 
 from unet import UNet
 from utils import plot_img_and_mask
-from utils import resize_and_crop, normalize, hwc_to_chw, dense_crf
-
+from utils.dataset import BasicDataset
 
 def predict_img(net,
                 full_img,
@@ -20,18 +19,15 @@ def predict_img(net,
                 out_threshold=0.5,
                 use_dense_crf=False):
     net.eval()
-    img_height = full_img.size[1]
 
-    img = resize_and_crop(full_img, scale=scale_factor)
-    img = normalize(img)
-    img = hwc_to_chw(img)
+    ds = BasicDataset('', '', scale=scale_factor)
+    img = ds.preprocess(full_img)
 
-    X = torch.from_numpy(img).unsqueeze(0)
-
-    X = X.to(device=device)
+    img = img.unsqueeze(0)
+    img = img.to(device=device, dtype=torch.float32)
 
     with torch.no_grad():
-        output = net(X)
+        output = net(img)
 
         if net.n_classes > 1:
             probs = F.softmax(output, dim=1)
@@ -43,13 +39,12 @@ def predict_img(net,
         tf = transforms.Compose(
             [
                 transforms.ToPILImage(),
-                transforms.Resize(img_height),
+                transforms.Resize(full_img.shape[1]),
                 transforms.ToTensor()
             ]
         )
 
         probs = tf(probs.cpu())
-
         full_mask = probs.squeeze().cpu().numpy()
 
     if use_dense_crf:

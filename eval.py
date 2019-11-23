@@ -5,27 +5,25 @@ from tqdm import tqdm
 from dice_loss import dice_coeff
 
 
-def eval_net(net, dataset, device, n_val):
+def eval_net(net, loader, device, n_val):
     """Evaluation without the densecrf with the dice coefficient"""
     net.eval()
     tot = 0
 
-    for i, b in tqdm(enumerate(dataset), total=n_val, desc='Validation round', unit='img'):
-        img = b[0]
-        true_mask = b[1]
+    for i, b in tqdm(enumerate(loader), desc='Validation round', unit='img'):
+        imgs = b['image']
+        true_masks = b['mask']
 
-        img = torch.from_numpy(img).unsqueeze(0)
-        true_mask = torch.from_numpy(true_mask).unsqueeze(0)
+        imgs = imgs.to(device=device, dtype=torch.float32)
+        true_masks = true_masks.to(device=device, dtype=torch.float32)
 
-        img = img.to(device=device)
-        true_mask = true_mask.to(device=device)
+        mask_pred = net(imgs)
 
-        mask_pred = net(img).squeeze(dim=0)
-
-        mask_pred = (mask_pred > 0.5).float()
-        if net.n_classes > 1:
-            tot += F.cross_entropy(mask_pred.unsqueeze(dim=0), true_mask.unsqueeze(dim=0)).item()
-        else:
-            tot += dice_coeff(mask_pred, true_mask.squeeze(dim=1)).item()
+        for true_mask in true_masks:
+            mask_pred = (mask_pred > 0.5).float()
+            if net.n_classes > 1:
+                tot += F.cross_entropy(mask_pred.unsqueeze(dim=0), true_mask.unsqueeze(dim=0)).item()
+            else:
+                tot += dice_coeff(mask_pred, true_mask.squeeze(dim=1)).item()
 
     return tot / n_val
