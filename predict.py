@@ -9,8 +9,10 @@ from torchvision import transforms
 import torch.nn.functional as F
 
 from unet import UNet
-from utils import plot_img_and_mask
+from utils.data_vis import plot_img_and_mask
 from utils.dataset import BasicDataset
+from utils.crf import dense_crf
+
 
 def predict_img(net,
                 full_img,

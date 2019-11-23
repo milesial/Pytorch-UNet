@@ -11,8 +11,8 @@ from tqdm import tqdm
 
 from eval import eval_net
 from unet import UNet
-from utils import get_ids, split_train_val, get_imgs_and_masks, batch
 
+from torch.utils.tensorboard import SummaryWriter
 from utils.dataset import BasicDataset
 from torch.utils.data import DataLoader, random_split
 
@@ -26,7 +26,7 @@ def train_net(net,
               epochs=5,
               batch_size=1,
               lr=0.1,
-              val_percent=0.15,
+              val_percent=0.1,
               save_cp=True,
               img_scale=0.5):
 
@@ -34,8 +34,11 @@ def train_net(net,
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
-    train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=4)
-    val_loader = DataLoader(val, batch_size=batch_size, shuffle=False, num_workers=4)
+    train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True)
+    val_loader = DataLoader(val, batch_size=batch_size, shuffle=False, num_workers=8, pin_memory=True)
+
+    writer = SummaryWriter(comment=f'LR_{lr}_BS_{batch_size}_SCALE_{img_scale}')
+    global_step = 0
 
     logging.info(f'''Starting training:
         Epochs:          {epochs}
@@ -48,7 +51,7 @@ def train_net(net,
         Images scaling:  {img_scale}
     ''')
 
-    optimizer = optim.Adam(net.parameters(), lr=lr)
+    optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8)
     if net.n_classes > 1:
         criterion = nn.CrossEntropyLoss()
     else:
@@ -78,6 +81,7 @@ def train_net(net,
                 masks_pred = net(imgs)
                 loss = criterion(masks_pred, true_masks)
                 epoch_loss += loss.item()
+                writer.add_scalar('Loss/train', loss.item(), global_step)
 
                 pbar.set_postfix(**{'loss (batch)': loss.item()})
 
@@ -85,7 +89,22 @@ def train_net(net,
                 loss.backward()
                 optimizer.step()
 
-                pbar.update(batch_size)
+                pbar.update(imgs.shape[0])
+                global_step += 1
+                if global_step % (len(dataset) // (10 * batch_size)) == 0:
+                    val_score = eval_net(net, val_loader, device, n_val)
+                    if net.n_classes > 1:
+                        logging.info('Validation cross entropy: {}'.format(val_score))
+                        writer.add_scalar('Loss/test', val_score, global_step)
+
+                    else:
+                        logging.info('Validation Dice Coeff: {}'.format(val_score))
+                        writer.add_scalar('Dice/test', val_score, global_step)
+
+                    writer.add_images('images', imgs, global_step)
+                    if net.n_classes == 1:
+                        writer.add_images('masks/true', true_masks, global_step)
+                        writer.add_images('masks/pred', torch.sigmoid(masks_pred) > 0.5, global_step)
 
         if save_cp:
             try:
@@ -97,12 +116,7 @@ def train_net(net,
                        dir_checkpoint + f'CP_epoch{epoch + 1}.pth')
             logging.info(f'Checkpoint {epoch + 1} saved !')
 
-        val_score = eval_net(net, val_loader, device, n_val)
-        if net.n_classes > 1:
-            logging.info('Validation cross entropy: {}'.format(val_score))
-
-        else:
-            logging.info('Validation Dice Coeff: {}'.format(val_score))
+    writer.close()
 
 
 def get_args():
@@ -118,7 +132,7 @@ def get_args():
                         help='Load model from a .pth file')
     parser.add_argument('-s', '--scale', dest='scale', type=float, default=0.5,
                         help='Downscaling factor of the images')
-    parser.add_argument('-v', '--validation', dest='val', type=float, default=15.0,
+    parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')
 
     return parser.parse_args()

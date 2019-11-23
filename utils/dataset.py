@@ -25,6 +25,7 @@ class BasicDataset(Dataset):
     def preprocess(self, pil_img):
         w, h = pil_img.size
         newW, newH = int(self.scale * w), int(self.scale * h)
+        assert newW > 0 and newH > 0, 'Scale is too small'
         pil_img = pil_img.resize((newW, newH))
 
         img_nd = np.array(pil_img)
