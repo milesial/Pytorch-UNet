@@ -16,7 +16,8 @@ def eval_net(net, loader, device, n_val):
             true_masks = batch['mask']
 
             imgs = imgs.to(device=device, dtype=torch.float32)
-            true_masks = true_masks.to(device=device, dtype=torch.float32)
+            mask_type = torch.float32 if net.n_classes == 1 else torch.long
+            true_masks = true_masks.to(device=device, dtype=mask_type)
 
             mask_pred = net(imgs)
 
