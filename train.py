@@ -162,18 +162,18 @@ if __name__ == '__main__':
     # faster convolutions, but more memory
     # cudnn.benchmark = True
 
-try:
-    train_net(net=net,
-              epochs=args.epochs,
-              batch_size=args.batchsize,
-              lr=args.lr,
-              device=device,
-              img_scale=args.scale,
-              val_percent=args.val / 100)
-except KeyboardInterrupt:
-    torch.save(net.state_dict(), 'INTERRUPTED.pth')
-    logging.info('Saved interrupt')
     try:
-        sys.exit(0)
-    except SystemExit:
-        os._exit(0)
+        train_net(net=net,
+                  epochs=args.epochs,
+                  batch_size=args.batchsize,
+                  lr=args.lr,
+                  device=device,
+                  img_scale=args.scale,
+                  val_percent=args.val / 100)
+    except KeyboardInterrupt:
+        torch.save(net.state_dict(), 'INTERRUPTED.pth')
+        logging.info('Saved interrupt')
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)

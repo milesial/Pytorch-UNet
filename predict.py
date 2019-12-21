@@ -4,22 +4,20 @@ import os
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 from PIL import Image
 from torchvision import transforms
-import torch.nn.functional as F
 
 from unet import UNet
 from utils.data_vis import plot_img_and_mask
 from utils.dataset import BasicDataset
-from utils.crf import dense_crf
 
 
 def predict_img(net,
                 full_img,
                 device,
                 scale_factor=1,
-                out_threshold=0.5,
-                use_dense_crf=False):
+                out_threshold=0.5):
     net.eval()
 
     img = torch.from_numpy(BasicDataset.preprocess(full_img, scale_factor))
@@ -40,16 +38,13 @@ def predict_img(net,
         tf = transforms.Compose(
             [
                 transforms.ToPILImage(),
-                transforms.Resize(full_img.shape[1]),
+                transforms.Resize(full_img.size[1]),
                 transforms.ToTensor()
             ]
         )
 
         probs = tf(probs.cpu())
         full_mask = probs.squeeze().cpu().numpy()
-
-    if use_dense_crf:
-        full_mask = dense_crf(np.array(full_img).astype(np.uint8), full_mask)
 
     return full_mask > out_threshold
 
@@ -127,7 +122,6 @@ if __name__ == "__main__":
                            full_img=img,
                            scale_factor=args.scale,
                            out_threshold=args.mask_threshold,
-                           use_dense_crf=False,
                            device=device)
 
         if not args.no_save:
