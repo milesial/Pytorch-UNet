@@ -5,3 +5,4 @@ checkpoints/
 *.pth
 *.jpg
 SUBMISSION*
+venv/
