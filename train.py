@@ -35,7 +35,7 @@ def train_net(net,
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
     train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True)
-    val_loader = DataLoader(val, batch_size=batch_size, shuffle=False, num_workers=8, pin_memory=True)
+    val_loader = DataLoader(val, batch_size=batch_size, shuffle=False, num_workers=8, pin_memory=True, drop_last=True)
 
     writer = SummaryWriter(comment=f'LR_{lr}_BS_{batch_size}_SCALE_{img_scale}')
     global_step = 0
@@ -88,7 +88,7 @@ def train_net(net,
                 pbar.update(imgs.shape[0])
                 global_step += 1
                 if global_step % (len(dataset) // (10 * batch_size)) == 0:
-                    val_score = eval_net(net, val_loader, device, n_val)
+                    val_score = eval_net(net, val_loader, device)
                     if net.n_classes > 1:
                         logging.info('Validation cross entropy: {}'.format(val_score))
                         writer.add_scalar('Loss/test', val_score, global_step)
