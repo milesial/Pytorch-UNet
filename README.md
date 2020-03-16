@@ -79,9 +79,11 @@ By default, the `scale` is 0.5, so if you wish to obtain better results (but use
 The input images and target masks should be in the `data/imgs` and `data/masks` folders respectively.
 
 ## Tensorboard
-You can visualize in real time the train and test losses, along with the model predictions with tensorboard:
+You can visualize in real time the train and test losses, the weights and gradients, along with the model predictions with tensorboard:
 
 `tensorboard --logdir=runs`
+
+You can find a reference training run with the Caravana dataset on [TensorBoard.dev](https://tensorboard.dev/experiment/1m1Ql50MSJixCbG1m9EcDQ/#scalars&_smoothingWeight=0.6) (only scalars are shown currently).
 
 ## Notes on memory
 
