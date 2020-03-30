@@ -16,7 +16,10 @@ class UNet(nn.Module):
         self.down1 = Down(64, 128)
         self.down2 = Down(128, 256)
         self.down3 = Down(256, 512)
-        self.down4 = Down(512, 512)
+        if bilinear:
+            self.down4 = Down(512, 512)
+        else:
+            self.down4 = Down(512, 1024)
         self.up1 = Up(1024, 256, bilinear)
         self.up2 = Up(512, 128, bilinear)
         self.up3 = Up(256, 64, bilinear)
