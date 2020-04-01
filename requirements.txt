@@ -4,3 +4,4 @@ Pillow
 torch
 torchvision
 tensorboard
+future
