@@ -18,9 +18,9 @@ class UNet(nn.Module):
         self.down3 = Down(256, 512)
         factor = 2 if bilinear else 1
         self.down4 = Down(512, 1024 // factor)
-        self.up1 = Up(1024, 512, bilinear)
-        self.up2 = Up(512, 256, bilinear)
-        self.up3 = Up(256, 128, bilinear)
+        self.up1 = Up(1024, 512 // factor, bilinear)
+        self.up2 = Up(512, 256 // factor, bilinear)
+        self.up3 = Up(256, 128 // factor, bilinear)
         self.up4 = Up(128, 64 * factor, bilinear)
         self.outc = OutConv(64, n_classes)
 
