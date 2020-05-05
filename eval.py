@@ -29,4 +29,5 @@ def eval_net(net, loader, device):
                 tot += dice_coeff(pred, true_masks).item()
             pbar.update()
 
+    net.train()
     return tot / n_val
