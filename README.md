@@ -10,7 +10,7 @@ This model was trained from scratch with 5000 images (no data augmentation) and 
 The Carvana data is available on the [Kaggle website](https://www.kaggle.com/c/carvana-image-masking-challenge/data).
 
 ## Usage
-**Note : Use Python 3**
+**Note : Use Python 3.6 or newer**
 ### Prediction
 
 You can easily test the output masks on your images via the CLI.
