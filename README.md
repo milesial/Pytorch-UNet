@@ -13,7 +13,7 @@ The Carvana data is available on the [Kaggle website](https://www.kaggle.com/c/c
 **Note : Use Python 3.6 or newer**
 ### Prediction
 
-You can easily test the output masks on your images via the CLI.
+After training your model and saving it to MODEL.pth, you can easily test the output masks on your images via the CLI.
 
 To predict a single image and save it:
 
