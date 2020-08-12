@@ -81,6 +81,14 @@ By default, the `scale` is 0.5, so if you wish to obtain better results (but use
 
 The input images and target masks should be in the `data/imgs` and `data/masks` folders respectively.
 
+### Pretrained model
+A [pretrained model](https://github.com/milesial/Pytorch-UNet/releases/tag/v1.0) is available for the Carvana dataset. It can also be loaded from torch.hub:
+
+```python
+net = torch.hub.load('milesial/Pytorch-UNet', 'unet_carvana')
+```
+The training was done with a 100% scale and bilinear upsampling.
+
 ## Tensorboard
 You can visualize in real time the train and test losses, the weights and gradients, along with the model predictions with tensorboard:
 
