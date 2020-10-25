@@ -45,7 +45,10 @@ class BasicDataset(Dataset):
     def __getitem__(self, i):
         idx = self.ids[i]
         mask_file = glob(self.masks_dir + idx + self.mask_suffix + '.*')
+        # print(mask_file)
+        # print(self.masks_dir + idx + self.mask_suffix + '.*')
         img_file = glob(self.imgs_dir + idx + '.*')
+        # print(img_file)
 
         assert len(mask_file) == 1, \
             f'Either no mask or multiple masks found for the ID {idx}: {mask_file}'
