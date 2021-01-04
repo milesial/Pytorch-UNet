@@ -8,8 +8,6 @@
 
 Customized implementation of the [U-Net](https://arxiv.org/abs/1505.04597) in PyTorch for Kaggle's [Carvana Image Masking Challenge](https://www.kaggle.com/c/carvana-image-masking-challenge) from high definition images.
 
-TensorRT version of unet has been provieded [TensorRT U-Net](https://github.com/YuzhouPeng/unet-tensorrt) 
-
 This model was trained from scratch with 5000 images (no data augmentation) and scored a [dice coefficient](https://en.wikipedia.org/wiki/S%C3%B8rensen%E2%80%93Dice_coefficient) of 0.988423 (511 out of 735) on over 100k test images. This score could be improved with more training, data augmentation, fine tuning, playing with CRF post-processing, and applying more weights on the edges of the masks.
 
 The Carvana data is available on the [Kaggle website](https://www.kaggle.com/c/carvana-image-masking-challenge/data).
@@ -104,6 +102,10 @@ The model has be trained from scratch on a GTX970M 3GB.
 Predicting images of 1918*1280 takes 1.5GB of memory.
 Training takes much approximately 3GB, so if you are a few MB shy of memory, consider turning off all graphical displays.
 This assumes you use bilinear up-sampling, and not transposed convolution in the model.
+
+## TensorRT
+
+TensorRT version of unet has been provieded [TensorRT U-Net](https://github.com/YuzhouPeng/unet-tensorrt) 
 
 ## Support
 
