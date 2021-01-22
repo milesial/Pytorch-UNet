@@ -103,6 +103,10 @@ Predicting images of 1918*1280 takes 1.5GB of memory.
 Training takes much approximately 3GB, so if you are a few MB shy of memory, consider turning off all graphical displays.
 This assumes you use bilinear up-sampling, and not transposed convolution in the model.
 
+## TensorRT
+
+TensorRT version of unet has been provieded [TensorRT U-Net](https://github.com/YuzhouPeng/unet-tensorrt) 
+
 ## Support
 
 Personalized support for issues with this repository, or integrating with your own dataset, available on [xs:code](https://xscode.com/milesial/Pytorch-UNet).
