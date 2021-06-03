@@ -36,3 +36,72 @@ class UNet(nn.Module):
         x = self.up4(x, x1)
         logits = self.outc(x)
         return logits
+
+
+class CustomUNet(nn.Module):
+    def __init__(
+            self,
+            num_channels: int = 1,
+            num_classes: int = 1,
+            filters: int = 16,
+            num_layers: int = 4,
+            bilinear: bool = False,
+    ):
+        super().__init__()
+        self.num_channels = num_channels
+        self.num_classes = num_classes
+        self.bilinear = bilinear
+        self.num_layers = num_layers
+        self.filters = filters
+
+        self.inc = DoubleConv(self.num_channels, self.filters)
+        self.outc = OutConv(self.filters, self.num_classes)
+        self.output_activation = nn.Sigmoid()
+
+        self.down_list = nn.ModuleList()
+        self.up_list = nn.ModuleList()
+
+        factor = 2
+        in_channels = self.filters
+        for i in range(self.num_layers):
+            down = Down(in_channels, in_channels * factor)
+            up = Up(in_channels * factor, in_channels, self.bilinear)
+
+            self.down_list.append(down)
+            self.up_list.append(up)
+            in_channels *= factor
+        self.up_list = self.up_list[::-1]
+
+    def conv(self, x):
+        emb_list = []
+        x = self.inc(x)
+        for down in self.down_list:
+            emb_list.append(x)
+            x = down(x)
+        emb_list = emb_list[::-1]
+        return x, emb_list
+
+    def deconv(self, x, emb_list):
+        for up, emb in zip(self.up_list, emb_list):
+            x = up(x, emb)
+        logits = self.outc(x)
+        return logits
+
+    def training_step(self, batch, batch_idx):
+        x, y = batch
+        emb, emb_list = self.conv(x)
+        logits = self.deconv(emb, emb_list)
+        y_hat = self.output_activation(logits)
+        loss = F.mse_loss(y_hat, y)
+        self.log('train_loss', loss)
+        return loss
+
+    def configure_optimizers(self):
+        optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
+        return optimizer
+
+    def forward(self, x):
+        emb, emb_list = self.conv(x)
+        logits = self.deconv(emb, emb_list)
+        pred = self.output_activation(logits)
+        return pred
