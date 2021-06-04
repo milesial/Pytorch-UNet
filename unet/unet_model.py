@@ -3,6 +3,7 @@
 import torch.nn.functional as F
 
 from .unet_parts import *
+import pytorch_lightning as pl
 
 
 class UNet(nn.Module):
@@ -38,7 +39,7 @@ class UNet(nn.Module):
         return logits
 
 
-class CustomUNet(nn.Module):
+class CustomUNet(pl.LightningModule):
     def __init__(
             self,
             num_channels: int = 1,
@@ -46,6 +47,7 @@ class CustomUNet(nn.Module):
             filters: int = 16,
             num_layers: int = 4,
             bilinear: bool = False,
+            learning_rate = 0.001
     ):
         super().__init__()
         self.num_channels = num_channels
@@ -53,6 +55,7 @@ class CustomUNet(nn.Module):
         self.bilinear = bilinear
         self.num_layers = num_layers
         self.filters = filters
+        self.lr = learning_rate
 
         self.inc = DoubleConv(self.num_channels, self.filters)
         self.outc = OutConv(self.filters, self.num_classes)
@@ -93,12 +96,21 @@ class CustomUNet(nn.Module):
         logits = self.deconv(emb, emb_list)
         y_hat = self.output_activation(logits)
         loss = F.mse_loss(y_hat, y)
-        self.log('train_loss', loss)
+#         self.log('train_loss', loss)
+        self.log('train_loss', loss, on_step=True, on_epoch=False, prog_bar=True, logger=True)
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        x, y = batch
+        emb, emb_list = self.conv(x)
+        logits = self.deconv(emb, emb_list)
+        y_hat = self.output_activation(logits)
+        loss = F.mse_loss(y_hat, y)
+        self.log('test_loss', loss, on_step=True, on_epoch=False, prog_bar=True, logger=True)
         return loss
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
-        return optimizer
+        return torch.optim.Adam(self.parameters(), lr=self.lr)
 
     def forward(self, x):
         emb, emb_list = self.conv(x)
