@@ -1,7 +1,5 @@
 """ Full assembly of the parts to form the complete network """
 
-import torch.nn.functional as F
-
 from .unet_parts import *
 import pytorch_lightning as pl
 
@@ -55,7 +53,7 @@ class CustomUNet(pl.LightningModule):
         self.bilinear = bilinear
         self.num_layers = num_layers
         self.filters = filters
-        self.lr = learning_rate
+        self.learning_rate = learning_rate
 
         self.inc = DoubleConv(self.num_channels, self.filters)
         self.outc = OutConv(self.filters, self.num_classes)
@@ -90,15 +88,28 @@ class CustomUNet(pl.LightningModule):
         logits = self.outc(x)
         return logits
 
+    def forward(self, x):
+        emb, emb_list = self.conv(x)
+        logits = self.deconv(emb, emb_list)
+        pred = self.output_activation(logits)
+        return pred
+
     def training_step(self, batch, batch_idx):
         x, y = batch
         emb, emb_list = self.conv(x)
         logits = self.deconv(emb, emb_list)
         y_hat = self.output_activation(logits)
         loss = F.mse_loss(y_hat, y)
-#         self.log('train_loss', loss)
-        self.log('train_loss', loss, on_step=True, on_epoch=False, prog_bar=True, logger=True)
-        return loss
+        # self.log('train_loss', loss, on_step=True, on_epoch=False, prog_bar=True, logger=True)
+        tensorboard_logs = {
+            'train_loss': loss,
+        }
+
+        result = {
+            'loss': loss,
+            'log': tensorboard_logs,
+        }
+        return result
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
@@ -106,14 +117,28 @@ class CustomUNet(pl.LightningModule):
         logits = self.deconv(emb, emb_list)
         y_hat = self.output_activation(logits)
         loss = F.mse_loss(y_hat, y)
-        self.log('test_loss', loss, on_step=True, on_epoch=False, prog_bar=True, logger=True)
-        return loss
+        # self.log('test_loss', loss, on_step=True, on_epoch=True, prog_bar=False, logger=True)
+        tensorboard_logs = {
+            'val_loss': loss,
+        }
+
+        result = {
+            'val_loss': loss,
+            'log': tensorboard_logs,
+        }
+        return result
+
+    def test_step(self, batch, batch_idx):
+        return self.validation_step(batch, batch_idx)
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=self.lr)
+        optimizer = torch.optim.AdamW(self.parameters(), lr=self.learning_rate)
+        lr_scheduler = {'scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau(
+                                        optimizer,
+                                        verbose=True,
+                                    ),
+                        'name': 'learning_rate',
+                        'interval': 'step',
+                        'frequency': 1}
 
-    def forward(self, x):
-        emb, emb_list = self.conv(x)
-        logits = self.deconv(emb, emb_list)
-        pred = self.output_activation(logits)
-        return pred
+        return [optimizer], [lr_scheduler]
