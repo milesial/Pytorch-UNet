@@ -74,7 +74,7 @@ def mask_to_image(mask: np.ndarray):
     if mask.ndim == 2:
         return Image.fromarray((mask * 255).astype(np.uint8))
     elif mask.ndim == 3:
-        return Image.fromarray((np.argmax(mask, dim=0) * 255 / mask.shape[0]).astype(np.uint8))
+        return Image.fromarray((np.argmax(mask, axis=0) * 255 / mask.shape[0]).astype(np.uint8))
 
 
 if __name__ == '__main__':
