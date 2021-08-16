@@ -4,5 +4,5 @@ __pycache__/
 checkpoints/
 *.pth
 *.jpg
-SUBMISSION*
 venv/
+.idea/
