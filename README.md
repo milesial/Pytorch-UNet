@@ -89,7 +89,7 @@ You can specify which model file to use with `--model MODEL.pth`.
 
 ### Weights & Biases
 
-The training progress can be visualized in real-time using [Weights & Biases](wandb.ai/).  Loss curves, validation curves, weights and gradient histograms, as well as predicted masks are logged to the platform.
+The training progress can be visualized in real-time using [Weights & Biases](https://wandb.ai/).  Loss curves, validation curves, weights and gradient histograms, as well as predicted masks are logged to the platform.
 
 When launching a training, a link will be printed in the console. Click on it to go to your dashboard. If you have an existing W&B account, you can link it
  by setting the `WANDB_API_KEY` environment variable.
