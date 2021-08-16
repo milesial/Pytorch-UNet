@@ -6,7 +6,7 @@
 
 Customized implementation of the [U-Net](https://arxiv.org/abs/1505.04597) in PyTorch for Kaggle's [Carvana Image Masking Challenge](https://www.kaggle.com/c/carvana-image-masking-challenge) from high definition images.
 
-This model was trained from scratch with 5000 images (no data augmentation) and scored a [dice coefficient](https://en.wikipedia.org/wiki/S%C3%B8rensen%E2%80%93Dice_coefficient) of 0.988423 (511 out of 735) on over 100k test images. This score could be improved with more training, data augmentation, fine tuning, playing with CRF post-processing, and applying more weights on the edges of the masks.
+This model was trained from scratch with 5000 images (no data augmentation) and scored a [dice coefficient](https://en.wikipedia.org/wiki/S%C3%B8rensen%E2%80%93Dice_coefficient) of 0.988423 on over 100k test images. This score could be improved with more training, data augmentation, fine-tuning, CRF post-processing, and applying more weights on the edges of the masks.
 
 
 
@@ -16,7 +16,7 @@ This model was trained from scratch with 5000 images (no data augmentation) and 
 ### Docker
 
 A docker image containing the code and the dependencies is available on [DockerHub](https://hub.docker.com/repository/docker/milesial/unet).
-You can jump in the container with ([docker >=19.03](https://docs.docker.com/get-docker/)):
+You can **download and jump in the container** with ([docker >=19.03](https://docs.docker.com/get-docker/)):
 
 ```shell script
 docker run -it --rm --gpus all milesial/unet
@@ -48,8 +48,8 @@ optional arguments:
 ```
 
 By default, the `scale` is 0.5, so if you wish to obtain better results (but use more memory), set it to 1.
-The input images and target masks should be in the `data/imgs` and `data/masks` folders respectively. For Carvana, images are RGB and masks are black and white.
 
+Automatic mixed precision is aso available with the `--amp` flag. Mixed precision allows the model to use less memory and to be faster on recent GPUs.
 ### Prediction
 
 After training your model and saving it to `MODEL.pth`, you can easily test the output masks on your images via the CLI.
@@ -112,22 +112,15 @@ You can also download it using your Kaggle API key with:
 bash scripts/download_data.sh <username> <apikey>
 ```
 
-## Notes on memory
+The input images and target masks should be in the `data/imgs` and `data/masks` folders respectively. For Carvana, images are RGB and masks are black and white.
 
-The model has be trained from scratch on a GTX970M 3GB.
-Predicting images of 1918*1280 takes 1.5GB of memory.
-Training takes much approximately 3GB, so if you are a few MB shy of memory, consider turning off all graphical displays.
-This assumes you use bilinear up-sampling, and not transposed convolution in the model.
-
-## Convergence
-
-See a reference training run with the Caravana dataset on [TensorBoard.dev](https://tensorboard.dev/experiment/1m1Ql50MSJixCbG1m9EcDQ/#scalars&_smoothingWeight=0.6) (only scalars are shown currently).
-
-
+You can also use your own dataset as long as you make sure it is loaded properly in `utils/data_loading.py`.
 
 
 ---
 
-Original paper by Olaf Ronneberger, Philipp Fischer, Thomas Brox: [https://arxiv.org/abs/1505.04597](https://arxiv.org/abs/1505.04597)
+Original paper by Olaf Ronneberger, Philipp Fischer, Thomas Brox:
+
+[U-Net: Convolutional Networks for Biomedical Image Segmentation](https://arxiv.org/abs/1505.04597)
 
 ![network architecture](https://i.imgur.com/jeDVpqF.png)
