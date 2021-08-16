@@ -6,6 +6,33 @@
 
 Customized implementation of the [U-Net](https://arxiv.org/abs/1505.04597) in PyTorch for Kaggle's [Carvana Image Masking Challenge](https://www.kaggle.com/c/carvana-image-masking-challenge) from high definition images.
 
+## Quick start using Docker
+
+1. [Install Docker 19.03 or later:](https://docs.docker.com/get-docker/)
+```
+curl https://get.docker.com | sh && sudo systemctl --now enable docker
+```
+2. [Install the NVIDIA container toolkit:](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html)
+```
+distribution=$(. /etc/os-release;echo $ID$VERSION_ID) \
+   && curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add - \
+   && curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
+sudo apt-get update
+sudo apt-get install -y nvidia-docker2
+sudo systemctl restart docker
+```
+3. [Download and run the image:](https://hub.docker.com/repository/docker/milesial/unet)
+```
+sudo docker run --rm --gpus all milesial/unet
+```
+
+4. Download the data and run training:
+```
+bash scripts/download_data.sh
+python train.py --amp
+```
+
+## Description
 This model was trained from scratch with 5000 images (no data augmentation) and scored a [dice coefficient](https://en.wikipedia.org/wiki/S%C3%B8rensen%E2%80%93Dice_coefficient) of 0.988423 on over 100k test images. This score could be improved with more training, data augmentation, fine-tuning, CRF post-processing, and applying more weights on the edges of the masks.
 
 
@@ -49,7 +76,9 @@ optional arguments:
 
 By default, the `scale` is 0.5, so if you wish to obtain better results (but use more memory), set it to 1.
 
-Automatic mixed precision is aso available with the `--amp` flag. Mixed precision allows the model to use less memory and to be faster on recent GPUs.
+Automatic mixed precision is also available with the `--amp` flag. [Mixed precision](https://arxiv.org/abs/1710.03740) allows the model to use less memory and to be faster on recent GPUs by using FP16 arithmetic.
+
+
 ### Prediction
 
 After training your model and saving it to `MODEL.pth`, you can easily test the output masks on your images via the CLI.

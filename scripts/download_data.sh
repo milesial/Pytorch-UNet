@@ -1,5 +1,8 @@
-USERNAME=$1
-APIKEY=$2
+echo -n "Kaggle username: "
+read USERNAME
+echo ""
+echo -n "Kaggle API key: "
+read APIKEY
 
 pip install kaggle --upgrade
 mkdir -p ~/.kaggle
