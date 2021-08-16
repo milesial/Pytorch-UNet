@@ -109,7 +109,7 @@ The Carvana data is available on the [Kaggle website](https://www.kaggle.com/c/c
 You can also download it using your Kaggle API key with:
 
 ```shell script
-bash download_data.sh <username> <apikey>
+bash scripts/download_data.sh <username> <apikey>
 ```
 
 ## Notes on memory
