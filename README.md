@@ -1,5 +1,8 @@
 # U-Net: Semantic segmentation with PyTorch
 
+<a href="https://hub.docker.com/r/milesial/unet"><img src="https://img.shields.io/docker/cloud/build/milesial/unet?label=docker%20image&logo=Docker&style=for-the-badge" /></a>
+<a href="https://hub.docker.com/r/milesial/unet"><img src="https://img.shields.io/badge/PyTorch%20version-v1.9.0-red.svg?logo=PyTorch&style=for-the-badge" /></a>
+<a href="https://hub.docker.com/r/milesial/unet"><img src="https://img.shields.io/github/license/milesial/PyTorch-UNet?color=blue&style=for-the-badge" /></a>
 
 ![input and output for a random image in the test dataset](https://i.imgur.com/GD8FcB7.png)
 
