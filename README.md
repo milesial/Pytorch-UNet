@@ -6,6 +6,16 @@
 
 Customized implementation of the [U-Net](https://arxiv.org/abs/1505.04597) in PyTorch for Kaggle's [Carvana Image Masking Challenge](https://www.kaggle.com/c/carvana-image-masking-challenge) from high definition images.
 
+- [Quick start using Docker](#quick-start-using-docker)
+- [Description](#description)
+- [Usage](#usage)
+  - [Docker](#docker)
+  - [Training](#training)
+  - [Prediction](#prediction)
+- [Weights & Biases](#weights--biases)
+- [Pretrained model](#pretrained-model)
+- [Data](#data)
+
 ## Quick start using Docker
 
 1. [Install Docker 19.03 or later:](https://docs.docker.com/get-docker/)
@@ -116,7 +126,7 @@ optional arguments:
 ```
 You can specify which model file to use with `--model MODEL.pth`.
 
-### Weights & Biases
+## Weights & Biases
 
 The training progress can be visualized in real-time using [Weights & Biases](https://wandb.ai/).  Loss curves, validation curves, weights and gradient histograms, as well as predicted masks are logged to the platform.
 
@@ -124,7 +134,7 @@ When launching a training, a link will be printed in the console. Click on it to
  by setting the `WANDB_API_KEY` environment variable.
 
 
-### Pretrained model
+## Pretrained model
 A [pretrained model](https://github.com/milesial/Pytorch-UNet/releases/tag/v1.0) is available for the Carvana dataset. It can also be loaded from torch.hub:
 
 ```python
@@ -135,10 +145,10 @@ The training was done with a 100% scale and bilinear upsampling.
 ## Data
 The Carvana data is available on the [Kaggle website](https://www.kaggle.com/c/carvana-image-masking-challenge/data).
 
-You can also download it using your Kaggle API key with:
+You can also download it using the helper script:
 
 ```shell script
-bash scripts/download_data.sh <username> <apikey>
+bash scripts/download_data.sh
 ```
 
 The input images and target masks should be in the `data/imgs` and `data/masks` folders respectively. For Carvana, images are RGB and masks are black and white.
