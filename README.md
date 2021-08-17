@@ -19,11 +19,11 @@ Customized implementation of the [U-Net](https://arxiv.org/abs/1505.04597) in Py
 ## Quick start using Docker
 
 1. [Install Docker 19.03 or later:](https://docs.docker.com/get-docker/)
-```
+```bash
 curl https://get.docker.com | sh && sudo systemctl --now enable docker
 ```
 2. [Install the NVIDIA container toolkit:](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html)
-```
+```bash
 distribution=$(. /etc/os-release;echo $ID$VERSION_ID) \
    && curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add - \
    && curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
@@ -32,12 +32,12 @@ sudo apt-get install -y nvidia-docker2
 sudo systemctl restart docker
 ```
 3. [Download and run the image:](https://hub.docker.com/repository/docker/milesial/unet)
-```
-sudo docker run --rm --gpus all milesial/unet
+```bash
+sudo docker run --rm --gpus all -it milesial/unet
 ```
 
 4. Download the data and run training:
-```
+```bash
 bash scripts/download_data.sh
 python train.py --amp
 ```
@@ -55,15 +55,14 @@ This model was trained from scratch with 5000 images (no data augmentation) and 
 A docker image containing the code and the dependencies is available on [DockerHub](https://hub.docker.com/repository/docker/milesial/unet).
 You can **download and jump in the container** with ([docker >=19.03](https://docs.docker.com/get-docker/)):
 
-```shell script
+```console
 docker run -it --rm --gpus all milesial/unet
 ```
 
 
-
 ### Training
 
-```shell script
+```console
 > python train.py -h
 usage: train.py [-h] [--epochs E] [--batch-size B] [--learning-rate LR]
                 [--load LOAD] [--scale SCALE] [--validation VAL] [--amp]
@@ -101,7 +100,7 @@ To predict a multiple images and show them without saving them:
 
 `python predict.py -i image1.jpg image2.jpg --viz --no-save`
 
-```shell script
+```console
 > python predict.py -h
 usage: predict.py [-h] [--model FILE] --input INPUT [INPUT ...] 
                   [--output INPUT [INPUT ...]] [--viz] [--no-save]
@@ -147,7 +146,7 @@ The Carvana data is available on the [Kaggle website](https://www.kaggle.com/c/c
 
 You can also download it using the helper script:
 
-```shell script
+```
 bash scripts/download_data.sh
 ```
 
