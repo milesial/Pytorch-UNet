@@ -46,8 +46,9 @@ python train.py --amp
 ```
 
 ## Description
-This model was trained from scratch with 5000 images (no data augmentation) and scored a [dice coefficient](https://en.wikipedia.org/wiki/S%C3%B8rensen%E2%80%93Dice_coefficient) of 0.988423 on over 100k test images. This score could be improved with more training, data augmentation, fine-tuning, CRF post-processing, and applying more weights on the edges of the masks.
+This model was trained from scratch with 5k images and scored a [Dice coefficient](https://en.wikipedia.org/wiki/S%C3%B8rensen%E2%80%93Dice_coefficient) of 0.988423 on over 100k test images.
 
+It can be easily used for multiclass segmentation, portrait segmentation, medical segmentation, ...
 
 
 ## Usage
@@ -56,7 +57,7 @@ This model was trained from scratch with 5000 images (no data augmentation) and 
 ### Docker
 
 A docker image containing the code and the dependencies is available on [DockerHub](https://hub.docker.com/repository/docker/milesial/unet).
-You can **download and jump in the container** with ([docker >=19.03](https://docs.docker.com/get-docker/)):
+You can download and jump in the container with ([docker >=19.03](https://docs.docker.com/get-docker/)):
 
 ```console
 docker run -it --rm --gpus all milesial/unet
@@ -88,7 +89,7 @@ optional arguments:
 
 By default, the `scale` is 0.5, so if you wish to obtain better results (but use more memory), set it to 1.
 
-Automatic mixed precision is also available with the `--amp` flag. [Mixed precision](https://arxiv.org/abs/1710.03740) allows the model to use less memory and to be faster on recent GPUs by using FP16 arithmetic.
+Automatic mixed precision is also available with the `--amp` flag. [Mixed precision](https://arxiv.org/abs/1710.03740) allows the model to use less memory and to be faster on recent GPUs by using FP16 arithmetic. Enabling AMP is recommended.
 
 
 ### Prediction
@@ -155,7 +156,7 @@ bash scripts/download_data.sh
 
 The input images and target masks should be in the `data/imgs` and `data/masks` folders respectively. For Carvana, images are RGB and masks are black and white.
 
-You can also use your own dataset as long as you make sure it is loaded properly in `utils/data_loading.py`.
+You can use your own dataset as long as you make sure it is loaded properly in `utils/data_loading.py`.
 
 
 ---
