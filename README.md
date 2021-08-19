@@ -141,7 +141,7 @@ When launching a training, a link will be printed in the console. Click on it to
 A [pretrained model](https://github.com/milesial/Pytorch-UNet/releases/tag/v2.0) is available for the Carvana dataset. It can also be loaded from torch.hub:
 
 ```python
-net = torch.hub.load('milesial/Pytorch-UNet', 'unet_carvana')
+net = torch.hub.load('milesial/Pytorch-UNet', 'unet_carvana', pretrained=True)
 ```
 The training was done with a 50% scale and bilinear upsampling.
 
