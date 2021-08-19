@@ -138,12 +138,12 @@ When launching a training, a link will be printed in the console. Click on it to
 
 
 ## Pretrained model
-A [pretrained model](https://github.com/milesial/Pytorch-UNet/releases/tag/v1.0) is available for the Carvana dataset. It can also be loaded from torch.hub:
+A [pretrained model](https://github.com/milesial/Pytorch-UNet/releases/tag/v2.0) is available for the Carvana dataset. It can also be loaded from torch.hub:
 
 ```python
 net = torch.hub.load('milesial/Pytorch-UNet', 'unet_carvana')
 ```
-The training was done with a 100% scale and bilinear upsampling.
+The training was done with a 50% scale and bilinear upsampling.
 
 ## Data
 The Carvana data is available on the [Kaggle website](https://www.kaggle.com/c/carvana-image-masking-challenge/data).
