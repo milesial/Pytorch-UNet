@@ -36,7 +36,7 @@ sudo systemctl restart docker
 ```
 3. [Download and run the image:](https://hub.docker.com/repository/docker/milesial/unet)
 ```bash
-sudo docker run --rm --gpus all -it milesial/unet
+sudo docker run --rm --shm-size=8g --ulimit memlock=-1 --gpus all -it milesial/unet
 ```
 
 4. Download the data and run training:
@@ -60,7 +60,7 @@ A docker image containing the code and the dependencies is available on [DockerH
 You can download and jump in the container with ([docker >=19.03](https://docs.docker.com/get-docker/)):
 
 ```console
-docker run -it --rm --gpus all milesial/unet
+docker run -it --rm --shm-size=8g --ulimit memlock=-1 --gpus all milesial/unet
 ```
 
 
