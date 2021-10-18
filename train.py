@@ -2,6 +2,7 @@ import argparse
 import logging
 import sys
 from pathlib import Path
+import pkg_resources as pkg
 
 import torch
 import torch.nn as nn
@@ -47,7 +48,14 @@ def train_net(net,
     val_loader = DataLoader(val_set, shuffle=False, drop_last=True, **loader_args)
 
     # (Initialize logging)
-    experiment = wandb.init(project='U-Net', resume='allow', anonymous='must')
+    anonymous = 'must'
+    mode = 'online'
+    if pkg.parse_version(wandb.__version__) >= pkg.parse_version('0.12.2'):
+        wandb_login_success = wandb.login(timeout=30)
+        if wandb_login_success:
+            anonymous = 'never'
+
+    experiment = wandb.init(project='U-Net', resume='allow', mode=mode, anonymous=anonymous)
     experiment.config.update(dict(epochs=epochs, batch_size=batch_size, learning_rate=learning_rate,
                                   val_percent=val_percent, save_checkpoint=save_checkpoint, img_scale=img_scale,
                                   amp=amp))
