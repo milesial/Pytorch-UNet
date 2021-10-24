@@ -112,7 +112,7 @@ def train_net(net,
 
                 # Evaluation round
                 division_step = (n_train // (10 * batch_size))
-                if  division_step > 0:
+                if division_step > 0:
                     if global_step % division_step == 0:
                         histograms = {}
                         for tag, value in net.named_parameters():
