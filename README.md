@@ -9,7 +9,9 @@
 
 Customized implementation of the [U-Net](https://arxiv.org/abs/1505.04597) in PyTorch for Kaggle's [Carvana Image Masking Challenge](https://www.kaggle.com/c/carvana-image-masking-challenge) from high definition images.
 
-- [Quick start using Docker](#quick-start-using-docker)
+- [Quick start](#quick-start)
+  - [Without Docker](#without-docker)
+  - [With Docker](#with-docker)
 - [Description](#description)
 - [Usage](#usage)
   - [Docker](#docker)
@@ -19,7 +21,26 @@ Customized implementation of the [U-Net](https://arxiv.org/abs/1505.04597) in Py
 - [Pretrained model](#pretrained-model)
 - [Data](#data)
 
-## Quick start using Docker
+## Quick start
+
+### Without Docker
+
+1. [Install CUDA](https://developer.nvidia.com/cuda-downloads)
+
+2. [Install PyTorch](https://pytorch.org/get-started/locally/)
+
+3. Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+4. Download the data and run training:
+```bash
+bash scripts/download_data.sh
+python train.py --amp
+```
+
+### With Docker
 
 1. [Install Docker 19.03 or later:](https://docs.docker.com/get-docker/)
 ```bash
