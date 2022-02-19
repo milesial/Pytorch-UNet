@@ -155,16 +155,16 @@ You can specify which model file to use with `--model MODEL.pth`.
 The training progress can be visualized in real-time using [Weights & Biases](https://wandb.ai/).  Loss curves, validation curves, weights and gradient histograms, as well as predicted masks are logged to the platform.
 
 When launching a training, a link will be printed in the console. Click on it to go to your dashboard. If you have an existing W&B account, you can link it
- by setting the `WANDB_API_KEY` environment variable.
+ by setting the `WANDB_API_KEY` environment variable. If not, it will create an anonymous run which is automatically deleted after 7 days.
 
 
 ## Pretrained model
-A [pretrained model](https://github.com/milesial/Pytorch-UNet/releases/tag/v2.0) is available for the Carvana dataset. It can also be loaded from torch.hub:
+A [pretrained model](https://github.com/milesial/Pytorch-UNet/releases/tag/v3.0) is available for the Carvana dataset. It can also be loaded from torch.hub:
 
 ```python
-net = torch.hub.load('milesial/Pytorch-UNet', 'unet_carvana', pretrained=True)
+net = torch.hub.load('milesial/Pytorch-UNet', 'unet_carvana', pretrained=True, scale=0.5)
 ```
-The training was done with a 50% scale and bilinear upsampling.
+Available scales are 0.5 and 1.0.
 
 ## Data
 The Carvana data is available on the [Kaggle website](https://www.kaggle.com/c/carvana-image-masking-challenge/data).
