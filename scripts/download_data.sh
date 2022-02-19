@@ -1,12 +1,18 @@
-echo -n "Kaggle username: "
-read USERNAME
-echo ""
-echo -n "Kaggle API key: "
-read APIKEY
+#!/bin/bash
+
+if [[ ! -f ~/.kaggle/kaggle.json ]]; then
+  echo -n "Kaggle username: "
+  read USERNAME
+  echo
+  echo -n "Kaggle API key: "
+  read APIKEY
+
+  mkdir -p ~/.kaggle
+  echo "{\"username\":\"$USERNAME\",\"key\":\"$APIKEY\"}" > ~/.kaggle/kaggle.json
+  chmod 600 ~/.kaggle/kaggle.json
+fi
 
 pip install kaggle --upgrade
-mkdir -p ~/.kaggle
-echo "{\"username\":\"$USERNAME\",\"key\":\"$APIKEY\"}" > ~/.kaggle/kaggle.json
 
 kaggle competitions download -c carvana-image-masking-challenge -f train_hq.zip
 unzip train_hq.zip
