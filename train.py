@@ -112,34 +112,37 @@ def train_net(net,
 
                 # Evaluation round
                 division_step = (n_train // (10 * batch_size))
-                if division_step > 0:
-                    if global_step % division_step == 0:
-                        histograms = {}
-                        for tag, value in net.named_parameters():
-                            tag = tag.replace('/', '.')
-                            histograms['Weights/' + tag] = wandb.Histogram(value.data.cpu())
-                            histograms['Gradients/' + tag] = wandb.Histogram(value.grad.data.cpu())
+                if division_step > 0 and global_step % division_step == 0:
+                    histograms = {}
+                    for tag, value in net.named_parameters():
+                        tag = tag.replace('/', '.')
+                        histograms[f'Weights/{tag}'] = wandb.Histogram(value.data.cpu())
+                        histograms[f'Gradients/{tag}'] = wandb.Histogram(value.grad.data.cpu())
 
-                        val_score = evaluate(net, val_loader, device)
-                        scheduler.step(val_score)
+                    val_score = evaluate(net, val_loader, device)
+                    scheduler.step(val_score)
 
-                        logging.info('Validation Dice score: {}'.format(val_score))
-                        experiment.log({
-                            'learning rate': optimizer.param_groups[0]['lr'],
-                            'validation Dice': val_score,
-                            'images': wandb.Image(images[0].cpu()),
-                            'masks': {
-                                'true': wandb.Image(true_masks[0].float().cpu()),
-                                'pred': wandb.Image(torch.softmax(masks_pred, dim=1).argmax(dim=1)[0].float().cpu()),
-                            },
-                            'step': global_step,
-                            'epoch': epoch,
-                            **histograms
-                        })
+                    logging.info(f'Validation Dice score: {val_score}')
+                    experiment.log({
+                        'learning rate': optimizer.param_groups[0]['lr'],
+                        'validation Dice': val_score,
+                        'images': wandb.Image(images[0].cpu()),
+                        'masks': {
+                            'true': wandb.Image(true_masks[0].float().cpu()),
+                            'pred': wandb.Image(torch.softmax(masks_pred, dim=1).argmax(dim=1)[0].float().cpu()),
+                        },
+                        'step': global_step,
+                        'epoch': epoch,
+                        **histograms
+                    })
 
         if save_checkpoint:
             Path(dir_checkpoint).mkdir(parents=True, exist_ok=True)
-            torch.save(net.state_dict(), str(dir_checkpoint / 'checkpoint_epoch{}.pth'.format(epoch + 1)))
+            torch.save(
+                net.state_dict(),
+                str(dir_checkpoint / f'checkpoint_epoch{epoch + 1}.pth'),
+            )
+
             logging.info(f'Checkpoint {epoch + 1} saved!')
 
 

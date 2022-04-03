@@ -17,18 +17,26 @@ def dice_coeff(input: Tensor, target: Tensor, reduce_batch_first: bool = False, 
         return (2 * inter + epsilon) / (sets_sum + epsilon)
     else:
         # compute and average metric for each batch element
-        dice = 0
-        for i in range(input.shape[0]):
-            dice += dice_coeff(input[i, ...], target[i, ...])
+        dice = sum(
+            dice_coeff(input[i, ...], target[i, ...])
+            for i in range(input.shape[0])
+        )
+
         return dice / input.shape[0]
 
 
 def multiclass_dice_coeff(input: Tensor, target: Tensor, reduce_batch_first: bool = False, epsilon=1e-6):
     # Average of Dice coefficient for all classes
     assert input.size() == target.size()
-    dice = 0
-    for channel in range(input.shape[1]):
-        dice += dice_coeff(input[:, channel, ...], target[:, channel, ...], reduce_batch_first, epsilon)
+    dice = sum(
+        dice_coeff(
+            input[:, channel, ...],
+            target[:, channel, ...],
+            reduce_batch_first,
+            epsilon,
+        )
+        for channel in range(input.shape[1])
+    )
 
     return dice / input.shape[1]
 
