@@ -64,7 +64,7 @@ class BasicDataset(Dataset):
         img = self.load(img_file[0])
 
         assert img.size == mask.size, \
-            'Image and mask {name} should be the same size, but are {img.size} and {mask.size}'
+            f'Image and mask {name} should be the same size, but are {img.size} and {mask.size}'
 
         img = self.preprocess(img, self.scale, is_mask=False)
         mask = self.preprocess(mask, self.scale, is_mask=True)
