@@ -41,25 +41,25 @@ class Down(nn.Module):
 class Up(nn.Module):
     """Upscaling then double conv"""
 
-    def __init__(self, in_channels, out_channels, mode='upsample'):
+    def __init__(self, in_channels, out_channels, upscaling_mode='upsample'):
         super().__init__()
 
-        self.mode = mode
+        self.upscaling_mode = upscaling_mode
         # if bilinear, use the normal convolutions to reduce the number of channels
-        if self.mode == 'upsample':
+        if self.upscaling_mode == 'upsample':
             self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
             self.conv = DoubleConv(in_channels, out_channels, in_channels // 2)
-        elif self.mode == 'unpool':
+        elif self.upscaling_mode == 'unpool':
             self.up = nn.MaxUnpool2d(2)
             self.conv = DoubleConv(in_channels, out_channels, in_channels // 2)
-        elif self.mode == 'transpose':
+        elif self.upscaling_mode == 'transpose':
             self.up = nn.ConvTranspose2d(in_channels, in_channels // 2, kernel_size=2, stride=2)
             self.conv = DoubleConv(in_channels, out_channels)
         else:
             raise ValueError('mode should be one of [`upsample`, `unpool`, `transpose`]')
 
     def forward(self, x1, x2, indices):
-        if self.mode == 'unpool':
+        if self.upscaling_mode == 'unpool':
             x1 = self.up(x1, indices)
         else:
             x1 = self.up(x1)
