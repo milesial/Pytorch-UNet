@@ -24,10 +24,10 @@ class UNet(nn.Module):
 
     def forward(self, x):
         x1 = self.inc(x)
-        x2 = self.down1(x1)
-        x3 = self.down2(x2)
-        x4 = self.down3(x3)
-        x5 = self.down4(x4)
+        x2, indices2 = self.down1(x1)
+        x3, indices3 = self.down2(x2)
+        x4, indices4 = self.down3(x3)
+        x5, indices5 = self.down4(x4)
         x = self.up1(x5, x4, indices5)
         x = self.up2(x, x3, indices4)
         x = self.up3(x, x2, indices3)
