@@ -41,7 +41,7 @@ class Down(nn.Module):
 class Up(nn.Module):
     """Upscaling then double conv"""
 
-    def __init__(self, in_channels, out_channels, upscaling_mode='upsample'):
+    def __init__(self, in_channels, out_channels, upscaling_mode='transpose'):
         super().__init__()
 
         self.upscaling_mode = upscaling_mode

@@ -154,7 +154,7 @@ def get_args():
     parser.add_argument('--validation', '-v', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')
     parser.add_argument('--amp', action='store_true', default=False, help='Use mixed precision')
-    parser.add_argument('--upscaling_mode', default='upsample', const='upsample', nargs='?', choices=['upsample', 'unpool', 'transpose'], help='Upscaling operation (default: %(default)s)')
+    parser.add_argument('--upscaling_mode', default='transpose', const='transpose', nargs='?', choices=['upsample', 'unpool', 'transpose'], help='Upscaling operation (default: %(default)s)')
     parser.add_argument('--classes', '-c', type=int, default=2, help='Number of classes')
 
     return parser.parse_args()

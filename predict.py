@@ -57,8 +57,8 @@ def get_args():
                         help='Minimum probability value to consider a mask pixel white')
     parser.add_argument('--scale', '-s', type=float, default=0.5,
                         help='Scale factor for the input images')
-    parser.add_argument('--upscaling_mode', default='upsample', 
-                        const='upsample', nargs='?', choices=['upsample', 'unpool', 'transpose'], 
+    parser.add_argument('--upscaling_mode', default='transpose', 
+                        const='transpose', nargs='?', choices=['upsample', 'unpool', 'transpose'], 
                         help='Upscaling operation (default: %(default)s)')
 
     return parser.parse_args()
