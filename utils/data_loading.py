@@ -33,7 +33,10 @@ class BasicDataset(Dataset):
         pil_img = pil_img.resize((newW, newH), resample=Image.NEAREST if is_mask else Image.BICUBIC)
         img_ndarray = np.asarray(pil_img)
 
-        if not is_mask:
+        if is_mask:
+            if img_ndarray.ndim > 2:
+                img_ndarray = img_ndarray.sum(axis=-1, dtype=img_ndarray.dtype)
+        else:
             if img_ndarray.ndim == 2:
                 img_ndarray = img_ndarray[np.newaxis, ...]
             else:
