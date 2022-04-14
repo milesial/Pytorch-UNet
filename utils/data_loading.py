@@ -35,7 +35,8 @@ class BasicDataset(Dataset):
 
         if is_mask:
             if img_ndarray.ndim > 2:
-                img_ndarray = img_ndarray.sum(axis=-1, dtype=img_ndarray.dtype)
+                # customize this function if you want it to support RGB masks
+                raise RuntimeError("Only black-and-white images are supported as masks.")
         else:
             if img_ndarray.ndim == 2:
                 img_ndarray = img_ndarray[np.newaxis, ...]
