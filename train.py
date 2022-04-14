@@ -154,6 +154,7 @@ def get_args():
     parser.add_argument('--validation', '-v', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')
     parser.add_argument('--amp', action='store_true', default=False, help='Use mixed precision')
+    parser.add_argument('--bilinear', action='store_true', default=False, help='deprecated, use `--upscaling_mode=upsample` instead')
     parser.add_argument('--upscaling_mode', default='transpose', const='transpose', nargs='?', choices=['upsample', 'unpool', 'transpose'], help='Upscaling operation (default: %(default)s)')
     parser.add_argument('--classes', '-c', type=int, default=2, help='Number of classes')
 
@@ -167,10 +168,16 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f'Using device {device}')
 
+    upscaling_mode = args.upscaling_mode
+
+    # if deprecated billinear arg is set, overwrite upscaling_mode
+    if args.bilinear:
+        upscaling_mode = 'upsample'
+
     # Change here to adapt to your data
     # n_channels=3 for RGB images
     # n_classes is the number of probabilities you want to get per pixel
-    net = UNet(n_channels=3, n_classes=args.classes, upscaling_mode=args.upscaling_mode)
+    net = UNet(n_channels=3, n_classes=args.classes, upscaling_mode=upscaling_mode)
 
     logging.info(f'Network:\n'
                  f'\t{net.n_channels} input channels\n'
