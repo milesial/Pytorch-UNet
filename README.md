@@ -177,7 +177,7 @@ bash scripts/download_data.sh
 
 The input images and target masks should be in the `data/imgs` and `data/masks` folders respectively (note that the `imgs` and `masks` folder should not contain any sub-folder or any other files, due to the greedy data-loader). For Carvana, images are RGB and masks are black and white.
 
-You can use your own dataset as long as you make sure it is loaded properly in `utils/data_loading.py`.
+You can use your own dataset as long as you make sure it is loaded properly in `utils/data_loading.py`. For example, loading RGB-coded black and white masks will not work with the data-loading code as-is.
 
 
 ---
