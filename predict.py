@@ -64,8 +64,7 @@ def get_args():
 
 def get_output_filenames(args):
     def _generate_name(fn):
-        split = os.path.splitext(fn)
-        return f'{split[0]}_OUT{split[1]}'
+        return f'{os.path.splitext(fn)[0]}_OUT.png'
 
     return args.output or list(map(_generate_name, args.input))
 
