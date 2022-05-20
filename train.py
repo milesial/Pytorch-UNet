@@ -133,12 +133,18 @@ def train_net(net,
     grad_scaler = torch.cuda.amp.GradScaler(enabled=amp)
     criterion = loss_fn
     global_step = 0
+    val_step = 0
 
     # 5. Begin training
     for epoch in range(1, epochs+1):
         net.train()
         epoch_loss = 0
         with tqdm(total=n_train, desc=f'Epoch {epoch}/{epochs}', unit='img') as pbar:
+            train_td_loss = 0.0
+            train_pd_loss = 0.0
+            train_md_loss = 0.0
+            train_psd_loss = 0.0
+
             for batch in train_dl:
                 images = batch[0]
                 true_masks = batch[1]
@@ -155,6 +161,10 @@ def train_net(net,
                     masks_pred = net(images)
                     td_loss, pd_loss, md_loss, psd_loss = criterion(masks_pred, true_masks, sep=True)
                     loss = (1 - args.mean_wt) * (td_loss + pd_loss) + args.mean_wt * (md_loss + psd_loss)
+                    train_td_loss += images.shape[0] * td_loss.item()
+                    train_pd_loss += images.shape[0] * pd_loss.item()
+                    train_md_loss += images.shape[0] * md_loss.item()
+                    train_psd_loss += images.shape[0] * psd_loss.item()
 
                 optimizer.zero_grad(set_to_none=True)
                 grad_scaler.scale(loss).backward()
@@ -206,44 +216,23 @@ def train_net(net,
                     'val_pd_loss': pd_loss.item(),
                     'val_md_loss': md_loss.item(),
                     'val_psd_loss': psd_loss.item(),
+                    'step': val_step,
                     'epoch': epoch
                 })
 
-            # experiment.log({
-            #     'val_loss': (68 * (cum_pd_loss + cum_td_loss) + cum_md_loss + cum_psd_loss) / (138 * len(val_dl)),
-            #     'val_td_loss': cum_td_loss / len(val_dl),
-            #     'val_pd_loss': cum_pd_loss / len(val_dl),
-            #     'val_md_loss': cum_md_loss / len(val_dl),
-            #     'val_psd_loss': cum_psd_loss / len(val_dl),
-            #     'epoch': epoch
-            # })
+                val_step += 1
 
-                # Evaluation round
-                # division_step = (n_train // (10 * batch_size))
-                # if division_step > 0:
-                #     if global_step % division_step == 0:
-                #         histograms = {}
-                #         for tag, value in net.named_parameters():
-                #             tag = tag.replace('/', '.')
-                #             histograms['Weights/' + tag] = wandb.Histogram(value.data.cpu())
-                #             histograms['Gradients/' + tag] = wandb.Histogram(value.grad.data.cpu())
-                #
-                #         val_score = evaluate(net, val_dl, device)
-                #         scheduler.step(val_score)
-                #
-                #         logging.info('Validation Dice score: {}'.format(val_score))
-                #         experiment.log({
-                #             'learning rate': optimizer.param_groups[0]['lr'],
-                #             'validation Dice': val_score,
-                #             'images': wandb.Image(images[0].cpu()),
-                #             'masks': {
-                #                 'true': wandb.Image(true_masks[0].float().cpu()),
-                #                 'pred': wandb.Image(torch.softmax(masks_pred, dim=1).argmax(dim=1)[0].float().cpu()),
-                #             },
-                #             'step': global_step,
-                #             'epoch': epoch,
-                #             **histograms
-                #         })
+            train_td_loss = train_td_loss / n_train
+            train_td_loss = train_td_loss / n_train
+            train_td_loss = train_td_loss / n_train
+            train_td_loss = train_td_loss / n_train
+
+            print("Epoch: {} \nTrain td_loss: {} pd loss: {} md-10 loss: {} psd-10 loss: {}\n Val td_loss: {} "
+                  "pd loss: {} md-10 loss: {} psd-10 loss: {}\n".format(epoch,
+                                                                        train_td_loss / n_train, train_pd_loss / n_train,
+                                                                        train_md_loss / n_train, train_psd_loss / n_train,
+                                                                        cum_td_loss / n_val, cum_pd_loss / n_val,
+                                                                        cum_md_loss / n_val, cum_psd_loss / n_val))
 
         if save_checkpoint:
             Path(dir_checkpoint).mkdir(parents=True, exist_ok=True)
