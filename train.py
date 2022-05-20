@@ -87,9 +87,13 @@ def train_net(net,
         transforms.Normalize(mean, std),
     ])
 
-    train_data = OCTADataset(train_df, transform=train_transform)
-    val_data = OCTADataset(val_df, transform=transform)
-    test_data = OCTADataset(test_df, transform=transform)
+    img_dir = "Dir_orig"
+    if args.flip:
+        img_dir = "Dir_flip"
+
+    train_data = OCTADataset(train_df, img_dir, transform=train_transform)
+    val_data = OCTADataset(val_df, img_dir, transform=transform)
+    test_data = OCTADataset(test_df, img_dir, transform=transform)
 
     # 2. Split into train / validation partitions
     n_val = len(val_data)
@@ -250,7 +254,8 @@ def get_args():
     parser.add_argument('--amp', action='store_true', default=False, help='Use mixed precision')
     parser.add_argument('--bilinear', action='store_true', default=False, help='Use bilinear upsampling')
     parser.add_argument('--classes', '-c', type=int, default=2, help='Number of classes')
-    parser.add_argument('--mean_wt', '-mwt', type=float, default=0.1, help='Number of classes')
+    parser.add_argument('--mean_wt', '-mwt', type=float, default=0.1, help='Loss weight for md-10 and psd-10')
+    parser.add_argument('--flip', '-fl', type=bool, default=True, help='Flipped images')
 
     return parser.parse_args()
 
