@@ -211,7 +211,6 @@ def train_net(net,
                     cum_psd_loss += images.shape[0] * psd_loss.item()
 
                 experiment.log({
-                    # 'val_loss': (68 * (pd_loss + td_loss) + loss + psd_loss) / (138 * len(val_dl)),
                     'val_td_loss': td_loss.item(),
                     'val_pd_loss': pd_loss.item(),
                     'val_md_loss': md_loss.item(),
@@ -221,11 +220,6 @@ def train_net(net,
                 })
 
                 val_step += 1
-
-            train_td_loss = train_td_loss / n_train
-            train_td_loss = train_td_loss / n_train
-            train_td_loss = train_td_loss / n_train
-            train_td_loss = train_td_loss / n_train
 
             print("Epoch: {} \nTrain td_loss: {} pd loss: {} md-10 loss: {} psd-10 loss: {}\n Val td_loss: {} "
                   "pd loss: {} md-10 loss: {} psd-10 loss: {}\n".format(epoch,
