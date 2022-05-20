@@ -105,10 +105,6 @@ def train_net(net,
     val_dl = DataLoader(val_data, batch_size=batch_size, shuffle=True, num_workers=2)
     test_dl = DataLoader(test_data, batch_size=batch_size, shuffle=True, num_workers=2)
 
-    # loader_args = dict(batch_size=batch_size, num_workers=4, pin_memory=True)
-    # train_loader = DataLoader(train_set, shuffle=True, **loader_args)
-    # val_loader = DataLoader(val_set, shuffle=False, drop_last=True, **loader_args)
-
     # (Initialize logging)
     experiment = wandb.init(project='U-Net', resume='allow', anonymous='must')
     experiment.config.update(dict(epochs=epochs, batch_size=batch_size, learning_rate=learning_rate,
@@ -139,11 +135,18 @@ def train_net(net,
     for epoch in range(1, epochs+1):
         net.train()
         epoch_loss = 0
+
+        train_td_loss = 0.0
+        train_pd_loss = 0.0
+        train_md_loss = 0.0
+        train_psd_loss = 0.0
+
+        cum_td_loss = 0.0
+        cum_pd_loss = 0.0
+        cum_md_loss = 0.0
+        cum_psd_loss = 0.0
+
         with tqdm(total=n_train, desc=f'Epoch {epoch}/{epochs}', unit='img') as pbar:
-            train_td_loss = 0.0
-            train_pd_loss = 0.0
-            train_md_loss = 0.0
-            train_psd_loss = 0.0
 
             for batch in train_dl:
                 images = batch[0]
@@ -221,12 +224,12 @@ def train_net(net,
 
                 val_step += 1
 
-            print("Epoch: {} \nTrain td_loss: {} pd loss: {} md-10 loss: {} psd-10 loss: {}\n Val td_loss: {} "
-                  "pd loss: {} md-10 loss: {} psd-10 loss: {}\n".format(epoch,
-                                                                        train_td_loss / n_train, train_pd_loss / n_train,
-                                                                        train_md_loss / n_train, train_psd_loss / n_train,
-                                                                        cum_td_loss / n_val, cum_pd_loss / n_val,
-                                                                        cum_md_loss / n_val, cum_psd_loss / n_val))
+        print("Epoch: {} \nTrain td_loss: {} pd loss: {} md-10 loss: {} psd-10 loss: {}\n Val td_loss: {} "
+              "pd loss: {} md-10 loss: {} psd-10 loss: {}\n".format(epoch,
+                                                                    train_td_loss / n_train, train_pd_loss / n_train,
+                                                                    train_md_loss / n_train, train_psd_loss / n_train,
+                                                                    cum_td_loss / n_val, cum_pd_loss / n_val,
+                                                                    cum_md_loss / n_val, cum_psd_loss / n_val))
 
         if save_checkpoint:
             Path(dir_checkpoint).mkdir(parents=True, exist_ok=True)
