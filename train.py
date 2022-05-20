@@ -193,7 +193,7 @@ def train_net(net,
                 cum_psd_loss = 0.0
                 with torch.no_grad():
                     masks_pred = net(images)
-                    td_loss, pd_loss, md_loss, psd_loss = criterion(masks_pred, true_masks)
+                    td_loss, pd_loss, md_loss, psd_loss = criterion(masks_pred, true_masks, sep=True)
                     cum_td_loss += images.shape[0] * td_loss.item()
                     cum_pd_loss += images.shape[0] * pd_loss.item()
                     cum_md_loss += images.shape[0] * md_loss.item()
