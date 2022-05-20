@@ -74,6 +74,7 @@ def train_net(net,
         #     transforms.Resize(256),
         transforms.RandomCrop(256),
         transforms.RandomRotation(5),
+        transforms.Resize(300),
         transforms.ToTensor(),
         transforms.Normalize(mean, std),
     ])
@@ -81,6 +82,7 @@ def train_net(net,
     transform = transforms.Compose([
         #     transforms.Resize(256),
         transforms.CenterCrop(256),
+        transforms.Resize(300),
         transforms.ToTensor(),
         transforms.Normalize(mean, std),
     ])
@@ -248,7 +250,7 @@ def get_args():
     parser.add_argument('--amp', action='store_true', default=False, help='Use mixed precision')
     parser.add_argument('--bilinear', action='store_true', default=False, help='Use bilinear upsampling')
     parser.add_argument('--classes', '-c', type=int, default=2, help='Number of classes')
-    parser.add_argument('--mean_wt', '-c', type=float, default=0.1, help='Number of classes')
+    parser.add_argument('--mean_wt', '-mwt', type=float, default=0.1, help='Number of classes')
 
     return parser.parse_args()
 
