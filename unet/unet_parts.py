@@ -75,4 +75,4 @@ class OutConv(nn.Module):
         self.pool = nn.AvgPool2d(30)
 
     def forward(self, x):
-        return self.conv(x)
+        return self.pool(self.conv(x))

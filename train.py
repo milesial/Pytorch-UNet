@@ -24,7 +24,7 @@ dir_mask = Path('./data/masks/')
 dir_checkpoint = Path('./checkpoints/')
 
 
-def loss_fn(true, pred, sep=False):
+def loss_fn(pred, true, sep=False):
     pred_td = torch.cat([pred[:, 0, 0, 4:6], pred[:, 0, 1, 2:8], pred[:, 0, 2, 1:9],
                          pred[:, 0, 3, 1:9], pred[:, 0, 4, :], pred[:, 0, 5, :],
                          pred[:, 0, 6, 1:9], pred[:, 0, 7, 1:9], pred[:, 0, 8, 2:8],
@@ -37,8 +37,8 @@ def loss_fn(true, pred, sep=False):
     pred_md = torch.mean(pred_td, 1)
     pred_psd = torch.mean(pred_pd, 1)
 
-    true_td = true[: 0:68]
-    true_pd = true[: 68:136]
+    true_td = true[:, 0:68]
+    true_pd = true[:, 68:136]
     true_md = true[:, 136]
     true_psd = true[:, 137]
 
@@ -244,7 +244,7 @@ def train_net(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Train the UNet on images and target masks')
     parser.add_argument('--epochs', '-e', metavar='E', type=int, default=5, help='Number of epochs')
-    parser.add_argument('--batch-size', '-b', dest='batch_size', metavar='B', type=int, default=1, help='Batch size')
+    parser.add_argument('--batch-size', '-b', dest='batch_size', metavar='B', type=int, default=64, help='Batch size')
     parser.add_argument('--learning-rate', '-l', metavar='LR', type=float, default=1e-5,
                         help='Learning rate', dest='lr')
     parser.add_argument('--load', '-f', type=str, default=False, help='Load model from a .pth file')
