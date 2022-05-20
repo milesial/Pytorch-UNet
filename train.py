@@ -165,7 +165,7 @@ def train_net(net,
                 global_step += 1
                 epoch_loss += loss.item()
                 experiment.log({
-                    'train loss': loss.item(),
+                    'comp train loss': loss.item(),
                     'train_td_loss': td_loss.item(),
                     'train_pd_loss': pd_loss.item(),
                     'train_md_loss': md_loss.item(),
@@ -174,6 +174,11 @@ def train_net(net,
                     'epoch': epoch
                 })
                 pbar.set_postfix(**{'loss (batch)': loss.item()})
+
+            cum_td_loss = 0.0
+            cum_pd_loss = 0.0
+            cum_md_loss = 0.0
+            cum_psd_loss = 0.0
 
             for batch in val_dl:
                 images = batch[0]
@@ -187,10 +192,6 @@ def train_net(net,
                 images = images.to(device=device, dtype=torch.float32)
                 true_masks = true_masks.to(device=device, dtype=torch.long)
 
-                cum_td_loss = 0.0
-                cum_pd_loss = 0.0
-                cum_md_loss = 0.0
-                cum_psd_loss = 0.0
                 with torch.no_grad():
                     masks_pred = net(images)
                     td_loss, pd_loss, md_loss, psd_loss = criterion(masks_pred, true_masks, sep=True)
@@ -200,13 +201,22 @@ def train_net(net,
                     cum_psd_loss += images.shape[0] * psd_loss.item()
 
                 experiment.log({
-                    'val_loss': (68 * (cum_pd_loss + cum_td_loss) + cum_md_loss + cum_psd_loss) / (138 * len(val_dl)),
-                    'val_td_loss': cum_td_loss / len(val_dl),
-                    'val_pd_loss': cum_pd_loss / len(val_dl),
-                    'val_md_loss': cum_md_loss / len(val_dl),
-                    'val_psd_loss': cum_psd_loss / len(val_dl),
+                    # 'val_loss': (68 * (pd_loss + td_loss) + loss + psd_loss) / (138 * len(val_dl)),
+                    'val_td_loss': td_loss.item(),
+                    'val_pd_loss': pd_loss.item(),
+                    'val_md_loss': md_loss.item(),
+                    'val_psd_loss': psd_loss.item(),
                     'epoch': epoch
                 })
+
+            # experiment.log({
+            #     'val_loss': (68 * (cum_pd_loss + cum_td_loss) + cum_md_loss + cum_psd_loss) / (138 * len(val_dl)),
+            #     'val_td_loss': cum_td_loss / len(val_dl),
+            #     'val_pd_loss': cum_pd_loss / len(val_dl),
+            #     'val_md_loss': cum_md_loss / len(val_dl),
+            #     'val_psd_loss': cum_psd_loss / len(val_dl),
+            #     'epoch': epoch
+            # })
 
                 # Evaluation round
                 # division_step = (n_train // (10 * batch_size))
