@@ -7,6 +7,7 @@ import numpy as np
 import torch
 from PIL import Image
 from torch.utils.data import Dataset
+import copy
 
 
 class BasicDataset(Dataset):
@@ -78,3 +79,57 @@ class BasicDataset(Dataset):
 class CarvanaDataset(BasicDataset):
     def __init__(self, images_dir, masks_dir, scale=1):
         super().__init__(images_dir, masks_dir, scale, mask_suffix='_mask')
+
+
+class OCTADataset(Dataset):
+    def __init__(self, data, dir_path, transform=None):
+        self.data = data
+        self.transform = transform
+        self.dir_path = dir_path
+
+        # load the whole dataset in memory
+        self.samples = []
+
+        for idx in range(len(data)):
+            img_path = self.data[self.dir_path][idx]
+            # img_path = os.path.join('data', img_path)
+
+            md_10 = np.array([self.data["md_10"][idx]])
+            psd_10 = np.array([self.data["psd_10"][idx]])
+
+            td = self.data.iloc[idx, 78:146].to_numpy(dtype=np.float32)
+            pd = self.data.iloc[idx, 146:214].to_numpy(dtype=np.float32)
+
+            img = Image.open(img_path).convert("RGB")
+
+            # sample = {'img': img, 'labels': np.concatenate((md_10, td, psd_10, pd))}
+            sample = (img, np.concatenate((md_10, psd_10, td, pd)))
+
+            self.samples.append(sample)
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        # img_path = self.data[self.dir_path][idx]
+        # img_path = os.path.join('data', img_path)
+
+        # md_10 = np.array([self.data["md_10"][idx]])
+        # psd_10 = np.array([self.data["psd_10"][idx]])
+
+        # td = self.data.iloc[idx, 78:146].to_numpy(dtype=np.float32)
+        # pd = self.data.iloc[idx, 146:214].to_numpy(dtype=np.float32)
+
+        # img = Image.open(img_path).convert("RGB")
+        # sample = {'img': img, 'labels': np.concatenate((md_10, td, psd_10, pd))}
+
+        sample = copy.deepcopy(self.samples[idx])
+
+        if self.transform:
+            # img = self.transform(img)
+            # sample['img'] = self.transform(sample['img'])
+
+            # sample[0] = self.transform(sample[0])
+
+            # return (self.transform(sample[0]), sample[1])
+            return self.transform(sample[0]), sample[1]
