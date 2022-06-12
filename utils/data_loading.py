@@ -58,13 +58,13 @@ class BasicDataset(Dataset):
         mask_file = list(self.masks_dir.glob(name + self.mask_suffix + '.*'))
         img_file = list(self.images_dir.glob(f'{name}.*'))
 
-        assert len(mask_file) == 1, f'Either no mask or multiple masks found for the ID {name}: {mask_file}'
         assert len(img_file) == 1, f'Either no image or multiple images found for the ID {name}: {img_file}'
+        assert len(mask_file) == 1, f'Either no mask or multiple masks found for the ID {name}: {mask_file}'
         mask = self.load(mask_file[0])
         img = self.load(img_file[0])
 
         assert img.size == mask.size, \
-            'Image and mask {name} should be the same size, but are {img.size} and {mask.size}'
+            f'Image and mask {name} should be the same size, but are {img.size} and {mask.size}'
 
         img = self.preprocess(img, self.scale, is_mask=False)
         mask = self.preprocess(mask, self.scale, is_mask=True)

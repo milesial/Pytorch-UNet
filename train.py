@@ -72,10 +72,10 @@ def train_net(net,
     global_step = 0
 
     # 5. Begin training
-    for epoch in range(epochs):
+    for epoch in range(1, epochs+1):
         net.train()
         epoch_loss = 0
-        with tqdm(total=n_train, desc=f'Epoch {epoch + 1}/{epochs}', unit='img') as pbar:
+        with tqdm(total=n_train, desc=f'Epoch {epoch}/{epochs}', unit='img') as pbar:
             for batch in train_loader:
                 images = batch['image']
                 true_masks = batch['mask']
@@ -138,12 +138,10 @@ def train_net(net,
 
         if save_checkpoint:
             Path(dir_checkpoint).mkdir(parents=True, exist_ok=True)
-            torch.save(
-                net.state_dict(),
-                str(dir_checkpoint / f'checkpoint_epoch{epoch + 1}.pth'),
-            )
 
-            logging.info(f'Checkpoint {epoch + 1} saved!')
+            torch.save(net.state_dict(), str(dir_checkpoint / 'checkpoint_epoch{}.pth'.format(epoch)))
+            logging.info(f'Checkpoint {epoch} saved!')
+
 
 
 def get_args():
@@ -158,6 +156,7 @@ def get_args():
                         help='Percent of the data that is used as validation (0-100)')
     parser.add_argument('--amp', action='store_true', default=False, help='Use mixed precision')
     parser.add_argument('--bilinear', action='store_true', default=False, help='Use bilinear upsampling')
+    parser.add_argument('--classes', '-c', type=int, default=2, help='Number of classes')
 
     return parser.parse_args()
 
@@ -172,7 +171,7 @@ if __name__ == '__main__':
     # Change here to adapt to your data
     # n_channels=3 for RGB images
     # n_classes is the number of probabilities you want to get per pixel
-    net = UNet(n_channels=3, n_classes=2, bilinear=args.bilinear)
+    net = UNet(n_channels=3, n_classes=args.classes, bilinear=args.bilinear)
 
     logging.info(f'Network:\n'
                  f'\t{net.n_channels} input channels\n'
@@ -196,4 +195,4 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')
         logging.info('Saved interrupt')
-        sys.exit(0)
+        raise
