@@ -112,6 +112,7 @@ def train_net(net,
 
                 # Evaluation round
                 division_step = (n_train // (10 * batch_size))
+
                 if division_step > 0 and global_step % division_step == 0:
                     histograms = {}
                     for tag, value in net.named_parameters():
@@ -129,12 +130,13 @@ def train_net(net,
                         'images': wandb.Image(images[0].cpu()),
                         'masks': {
                             'true': wandb.Image(true_masks[0].float().cpu()),
-                            'pred': wandb.Image(torch.softmax(masks_pred, dim=1).argmax(dim=1)[0].float().cpu()),
+                            'pred': wandb.Image(masks_pred.argmax(dim=1)[0].float().cpu()),
                         },
                         'step': global_step,
                         'epoch': epoch,
                         **histograms
                     })
+
 
         if save_checkpoint:
             Path(dir_checkpoint).mkdir(parents=True, exist_ok=True)

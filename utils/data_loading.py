@@ -46,7 +46,7 @@ class BasicDataset(Dataset):
     @staticmethod
     def load(filename):
         ext = splitext(filename)[1]
-        if ext in ['.npz', '.npy']:
+        if ext == '.npy':
             return Image.fromarray(np.load(filename))
         elif ext in ['.pt', '.pth']:
             return Image.fromarray(torch.load(filename).numpy())
