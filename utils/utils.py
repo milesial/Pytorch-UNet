@@ -11,7 +11,7 @@ def plot_img_and_mask(img, mask):
             ax[i + 1].set_title(f'Output mask (class {i + 1})')
             ax[i + 1].imshow(mask[i, :, :])
     else:
-        ax[1].set_title(f'Output mask')
+        ax[1].set_title('Output mask')
         ax[1].imshow(mask)
     plt.xticks([]), plt.yticks([])
     plt.show()
