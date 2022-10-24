@@ -117,8 +117,10 @@ def train_net(net,
                         histograms = {}
                         for tag, value in net.named_parameters():
                             tag = tag.replace('/', '.')
-                            histograms['Weights/' + tag] = wandb.Histogram(value.data.cpu())
-                            histograms['Gradients/' + tag] = wandb.Histogram(value.grad.data.cpu())
+                            if not torch.isinf(value).any():
+                                histograms['Weights/' + tag] = wandb.Histogram(value.data.cpu())
+                            if not torch.isinf(value.grad).any():
+                                histograms['Gradients/' + tag] = wandb.Histogram(value.grad.data.cpu())
 
                         val_score = evaluate(net, val_loader, device)
                         scheduler.step(val_score)
