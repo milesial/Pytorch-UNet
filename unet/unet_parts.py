@@ -30,31 +30,39 @@ class Down(nn.Module):
 
     def __init__(self, in_channels, out_channels):
         super().__init__()
-        self.maxpool_conv = nn.Sequential(
-            nn.MaxPool2d(2),
-            DoubleConv(in_channels, out_channels)
-        )
+        self.maxpool = nn.MaxPool2d(2, return_indices=True)
+        self.conv = DoubleConv(in_channels, out_channels)
 
     def forward(self, x):
-        return self.maxpool_conv(x)
+        x, indices = self.maxpool(x)
+        return self.conv(x), indices
 
 
 class Up(nn.Module):
     """Upscaling then double conv"""
 
-    def __init__(self, in_channels, out_channels, bilinear=True):
+    def __init__(self, in_channels, out_channels, upscaling_mode='transpose'):
         super().__init__()
 
+        self.upscaling_mode = upscaling_mode
         # if bilinear, use the normal convolutions to reduce the number of channels
-        if bilinear:
+        if self.upscaling_mode == 'upsample':
             self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
             self.conv = DoubleConv(in_channels, out_channels, in_channels // 2)
-        else:
+        elif self.upscaling_mode == 'unpool':
+            self.up = nn.MaxUnpool2d(2)
+            self.conv = DoubleConv(in_channels, out_channels, in_channels // 2)
+        elif self.upscaling_mode == 'transpose':
             self.up = nn.ConvTranspose2d(in_channels, in_channels // 2, kernel_size=2, stride=2)
             self.conv = DoubleConv(in_channels, out_channels)
+        else:
+            raise ValueError('mode should be one of [`upsample`, `unpool`, `transpose`]')
 
-    def forward(self, x1, x2):
-        x1 = self.up(x1)
+    def forward(self, x1, x2, indices):
+        if self.upscaling_mode == 'unpool':
+            x1 = self.up(x1, indices)
+        else:
+            x1 = self.up(x1)
         # input is CHW
         diffY = x2.size()[2] - x1.size()[2]
         diffX = x2.size()[3] - x1.size()[3]

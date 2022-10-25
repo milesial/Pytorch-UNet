@@ -57,7 +57,10 @@ def get_args():
                         help='Minimum probability value to consider a mask pixel white')
     parser.add_argument('--scale', '-s', type=float, default=0.5,
                         help='Scale factor for the input images')
-    parser.add_argument('--bilinear', action='store_true', default=False, help='Use bilinear upsampling')
+    parser.add_argument('--bilinear', action='store_true', default=False, help='deprecated, use `--upscaling_mode=upsample` instead')
+    parser.add_argument('--upscaling_mode', default='transpose', 
+                        const='transpose', nargs='?', choices=['upsample', 'unpool', 'transpose'], 
+                        help='Upscaling operation (default: %(default)s)')
 
     return parser.parse_args()
 
@@ -80,8 +83,13 @@ if __name__ == '__main__':
     args = get_args()
     in_files = args.input
     out_files = get_output_filenames(args)
+    upscaling_mode = args.upscaling_mode
 
-    net = UNet(n_channels=3, n_classes=2, bilinear=args.bilinear)
+    # if deprecated billinear arg is set, overwrite upscaling_mode
+    if args.bilinear:
+        upscaling_mode = 'upsample'
+
+    net = UNet(n_channels=3, n_classes=2, upscaling_mode=upscaling_mode)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f'Loading model {args.model}')
