@@ -40,8 +40,6 @@ class BasicDataset(Dataset):
             else:
                 img_ndarray = img_ndarray.transpose((2, 0, 1))
 
-            img_ndarray = img_ndarray / 255
-
         return img_ndarray
 
     @staticmethod
@@ -56,14 +54,13 @@ class BasicDataset(Dataset):
 
     @classmethod
     def mask_to_class(cls, mask: np.ndarray, mapping):
-        mask_ = np.empty((mask.shape[1], mask.shape[2]))
+        mask_ = np.zeros((mask.shape[1], mask.shape[2]))
         for k in mapping:
             k_array = np.array(k)
             # to have the same dim as the mask
             k_array = np.expand_dims(k_array, axis=(1, 2))
             # Extract each class indexes
             idx = (mask == k_array)
-            # check there is 3 channels
             validx = (idx.sum(0) == 3)
             mask_[validx] = mapping[k]
         return mask_
