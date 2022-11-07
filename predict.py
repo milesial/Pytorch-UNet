@@ -115,7 +115,7 @@ if __name__ == '__main__':
             out_filename = out_files[i]
             # if multiclass semantic segmentation, consider setting the mapping dict used during training, example:
             # mapping = {(0, 0, 0): 0, (255, 0, 255): 1, (0, 255, 255): 2}
-            result = mask_to_image(mask)
+            result = mask_to_image(mask, mapping={})
             result.save(out_filename)
             logging.info(f'Mask saved to {out_filename}')
 
