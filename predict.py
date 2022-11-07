@@ -68,12 +68,21 @@ def get_output_filenames(args):
 
     return args.output or list(map(_generate_name, args.input))
 
-
-def mask_to_image(mask: np.ndarray):
+# if multiclass semantic segmentation, consider setting the mapping dict used during training, example:
+# mapping = {(0, 0, 0): 0, (255, 0, 255): 1, (0, 255, 255): 2}
+def mask_to_image(mask: np.ndarray, mapping = {}):
     if mask.ndim == 2:
         return Image.fromarray((mask * 255).astype(np.uint8))
     elif mask.ndim == 3:
-        return Image.fromarray((np.argmax(mask, axis=0) * 255 / mask.shape[0]).astype(np.uint8))
+        # reverse the mapping values we have used during training
+        rev_mapping = {mapping[k]: k for k in mapping}
+        # create an empty image with 3 channels of shape : (3, h, w)
+        pred_image = torch.zeros(3, mask_pred.size(0), mask_pred.size(1), dtype=torch.uint8)
+        # replace predicted mask values with mapped values
+        for k in rev_mapping:
+            pred_image[:, mask_pred == k] = torch.tensor(rev_mapping[k]).byte().view(3, 1)
+        final_mask_pred = pred_image.permute(1, 2, 0).numpy()
+        return PIL.Image.fromarray(final_mask_pred)
 
 
 if __name__ == '__main__':
@@ -104,6 +113,8 @@ if __name__ == '__main__':
 
         if not args.no_save:
             out_filename = out_files[i]
+            # if multiclass semantic segmentation, consider setting the mapping dict used during training, example:
+            # mapping = {(0, 0, 0): 0, (255, 0, 255): 1, (0, 255, 255): 2}
             result = mask_to_image(mask)
             result.save(out_filename)
             logging.info(f'Mask saved to {out_filename}')
