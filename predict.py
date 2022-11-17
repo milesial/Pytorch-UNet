@@ -68,19 +68,25 @@ def get_output_filenames(args):
 
     return args.output or list(map(_generate_name, args.input))
 
+
 # if multiclass semantic segmentation, consider setting the mapping dict used during training, example:
 # mapping = {(0, 0, 0): 0, (255, 0, 255): 1, (0, 255, 255): 2}
 def mask_to_image(mask: np.ndarray, mapping = {}):
-
-    # reverse the mapping values we have used during training
-    rev_mapping = {mapping[k]: k for k in mapping}
-    # create an empty image with 3 channels of shape : (3, h, w)
-    pred_image = torch.zeros(3, mask_pred.size(0), mask_pred.size(1), dtype=torch.uint8)
-    # replace predicted mask values with mapped values
-    for k in rev_mapping:
-        pred_image[:, mask_pred == k] = torch.tensor(rev_mapping[k]).byte().view(3, 1)
-    final_mask_pred = pred_image.permute(1, 2, 0).numpy()
-    return PIL.Image.fromarray(final_mask_pred)
+    if mask.ndim == 2:
+        return Image.fromarray((mask * 255).astype(np.uint8))
+    else:
+        # probabilities to indexes --> index of each class that has the highest probability
+        mask = torch.argmax(mask, axis=0)
+        # mask shape: (h, w)
+        # reverse the mapping values we have used during training
+        rev_mapping = {mapping[k]: k for k in mapping}
+        # create an empty image with 3 channels of shape : (3, h, w)
+        pred_image = torch.zeros(3, mask.size(0), mask.size(1), dtype=torch.uint8)
+        # replace predicted mask values with mapped values
+        for k in rev_mapping:
+            pred_image[:, mask == k] = torch.tensor(rev_mapping[k]).byte().view(3, 1)
+        final_mask_pred = pred_image.permute(1, 2, 0).numpy()
+        return Image.fromarray(final_mask_pred)
 
 
 if __name__ == '__main__':
