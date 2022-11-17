@@ -10,12 +10,13 @@ from torch.utils.data import Dataset
 
 
 class BasicDataset(Dataset):
-    def __init__(self, images_dir: str, masks_dir: str, scale: float = 1.0, mask_suffix: str = ''):
+    def __init__(self, images_dir: str, masks_dir: str, scale: float = 1.0, mask_suffix: str = '', mapping={}):
         self.images_dir = Path(images_dir)
         self.masks_dir = Path(masks_dir)
         assert 0 < scale <= 1, 'Scale must be between 0 and 1'
         self.scale = scale
         self.mask_suffix = mask_suffix
+        self.mapping = mapping
 
         self.ids = [splitext(file)[0] for file in listdir(images_dir) if not file.startswith('.')]
         if not self.ids:
@@ -39,8 +40,6 @@ class BasicDataset(Dataset):
             else:
                 img_ndarray = img_ndarray.transpose((2, 0, 1))
 
-            img_ndarray = img_ndarray / 255
-
         return img_ndarray
 
     @staticmethod
@@ -52,6 +51,19 @@ class BasicDataset(Dataset):
             return Image.fromarray(torch.load(filename).numpy())
         else:
             return Image.open(filename)
+
+    @classmethod
+    def mask_to_class(cls, mask: np.ndarray, mapping):
+        mask_ = np.zeros((mask.shape[1], mask.shape[2]))
+        for k in mapping:
+            k_array = np.array(k)
+            # to have the same dim as the mask
+            k_array = np.expand_dims(k_array, axis=(1, 2))
+            # Extract each class indexes
+            idx = (mask == k_array)
+            validx = (idx.sum(0) == 3)
+            mask_[validx] = mapping[k]
+        return mask_
 
     def __getitem__(self, idx):
         name = self.ids[idx]
@@ -69,6 +81,9 @@ class BasicDataset(Dataset):
         img = self.preprocess(img, self.scale, is_mask=False)
         mask = self.preprocess(mask, self.scale, is_mask=True)
 
+        # mapping the class colors
+        mask = self.mask_to_class(mask, self.mapping)
+
         return {
             'image': torch.as_tensor(img.copy()).float().contiguous(),
             'mask': torch.as_tensor(mask.copy()).long().contiguous()
@@ -76,5 +91,5 @@ class BasicDataset(Dataset):
 
 
 class CarvanaDataset(BasicDataset):
-    def __init__(self, images_dir, masks_dir, scale=1):
+    def __init__(self, images_dir, masks_dir, scale=1, mapping = {}):
         super().__init__(images_dir, masks_dir, scale, mask_suffix='_mask')
