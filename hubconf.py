@@ -9,13 +9,11 @@ def unet_carvana(pretrained=False, scale=0.5):
     net = _UNet(n_channels=3, n_classes=2, bilinear=False)
     if pretrained:
         if scale == 0.5:
-            checkpoint = 'https://github.com/milesial/Pytorch-UNet/releases/download/v3.0/unet_carvana_scale0.5_epoch2.pth'
-        elif scale == 1.0:
-            checkpoint = 'https://github.com/milesial/Pytorch-UNet/releases/download/v3.0/unet_carvana_scale1.0_epoch2.pth'
+            checkpoint = 'https://github.com/milesial/Pytorch-UNet/releases/download/v4.0/unet_carvana_scale0.5_epoch5.pth'
         else:
-            raise RuntimeError('Only 0.5 and 1.0 scales are available')
-
-        net.load_state_dict(torch.hub.load_state_dict_from_url(checkpoint, progress=True))
+            raise RuntimeError('Only 0.5 scale is available')
+        state_dict = torch.hub.load_state_dict_from_url(checkpoint, progress=True)
+        del state_dict['mask_values']
+        net.load_state_dict(state_dict)
 
     return net
-
