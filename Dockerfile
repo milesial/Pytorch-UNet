@@ -1,4 +1,4 @@
-FROM nvcr.io/nvidia/pytorch:22.06-py3
+FROM nvcr.io/nvidia/pytorch:22.11-py3
 
 RUN rm -rf /workspace/*
 WORKDIR /workspace/unet

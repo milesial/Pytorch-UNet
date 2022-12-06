@@ -18,7 +18,7 @@ def predict_img(net,
                 scale_factor=1,
                 out_threshold=0.5):
     net.eval()
-    img = torch.from_numpy(BasicDataset.preprocess(full_img, scale_factor, is_mask=False))
+    img = torch.from_numpy(BasicDataset.preprocess(None, full_img, scale_factor, is_mask=False))
     img = img.unsqueeze(0)
     img = img.to(device=device, dtype=torch.float32)
 
@@ -69,15 +69,27 @@ def get_output_filenames(args):
     return args.output or list(map(_generate_name, args.input))
 
 
-def mask_to_image(mask: np.ndarray):
-    if mask.ndim == 2:
-        return Image.fromarray((mask * 255).astype(np.uint8))
-    elif mask.ndim == 3:
-        return Image.fromarray((np.argmax(mask, axis=0) * 255 / mask.shape[0]).astype(np.uint8))
+def mask_to_image(mask: np.ndarray, mask_values):
+    if isinstance(mask_values[0], list):
+        out = np.zeros((mask.shape[-2], mask.shape[-1], len(mask_values[0])), dtype=np.uint8)
+    elif mask_values == [0, 1]:
+        out = np.zeros((mask.shape[-2], mask.shape[-1]), dtype=np.bool)
+    else:
+        out = np.zeros((mask.shape[-2], mask.shape[-1]), dtype=np.uint8)
+
+    if mask.ndim == 3:
+        mask = np.argmax(mask, axis=0)
+
+    for i, v in enumerate(mask_values):
+        out[mask == i] = v
+
+    return Image.fromarray(out)
 
 
 if __name__ == '__main__':
     args = get_args()
+    logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+
     in_files = args.input
     out_files = get_output_filenames(args)
 
@@ -88,12 +100,14 @@ if __name__ == '__main__':
     logging.info(f'Using device {device}')
 
     net.to(device=device)
-    net.load_state_dict(torch.load(args.model, map_location=device))
+    state_dict = torch.load(args.model, map_location=device)
+    mask_values = state_dict.pop('mask_values')
+    net.load_state_dict(state_dict)
 
     logging.info('Model loaded!')
 
     for i, filename in enumerate(in_files):
-        logging.info(f'\nPredicting image {filename} ...')
+        logging.info(f'Predicting image {filename} ...')
         img = Image.open(filename)
 
         mask = predict_img(net=net,
@@ -104,7 +118,7 @@ if __name__ == '__main__':
 
         if not args.no_save:
             out_filename = out_files[i]
-            result = mask_to_image(mask)
+            result = mask_to_image(mask, mask_values)
             result.save(out_filename)
             logging.info(f'Mask saved to {out_filename}')
 
