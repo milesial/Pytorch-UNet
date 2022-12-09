@@ -23,25 +23,14 @@ def predict_img(net,
     img = img.to(device=device, dtype=torch.float32)
 
     with torch.no_grad():
-        output = net(img)
-
+        output = net(img).cpu()
+        output = F.interpolate(output, (full_img.size[1], full_img.size[0]), mode='bilinear')
         if net.n_classes > 1:
-            probs = F.softmax(output, dim=1)[0]
+            mask = output.argmax(dim=1)
         else:
-            probs = torch.sigmoid(output)[0]
+            mask = torch.sigmoid(output) > out_threshold
 
-        tf = transforms.Compose([
-            transforms.ToPILImage(),
-            transforms.Resize((full_img.size[1], full_img.size[0])),
-            transforms.ToTensor()
-        ])
-
-        full_mask = tf(probs.cpu()).squeeze()
-
-    if net.n_classes == 1:
-        return (full_mask > out_threshold).numpy()
-    else:
-        return F.one_hot(full_mask.argmax(dim=0), net.n_classes).permute(2, 0, 1).numpy()
+    return mask[0].long().squeeze().numpy()
 
 
 def get_args():
@@ -73,7 +62,7 @@ def mask_to_image(mask: np.ndarray, mask_values):
     if isinstance(mask_values[0], list):
         out = np.zeros((mask.shape[-2], mask.shape[-1], len(mask_values[0])), dtype=np.uint8)
     elif mask_values == [0, 1]:
-        out = np.zeros((mask.shape[-2], mask.shape[-1]), dtype=np.bool)
+        out = np.zeros((mask.shape[-2], mask.shape[-1]), dtype=bool)
     else:
         out = np.zeros((mask.shape[-2], mask.shape[-1]), dtype=np.uint8)
 
