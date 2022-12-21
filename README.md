@@ -27,7 +27,7 @@ Customized implementation of the [U-Net](https://arxiv.org/abs/1505.04597) in Py
 
 1. [Install CUDA](https://developer.nvidia.com/cuda-downloads)
 
-2. [Install PyTorch](https://pytorch.org/get-started/locally/)
+2. [Install PyTorch 1.12 or later](https://pytorch.org/get-started/locally/)
 
 3. Install dependencies
 ```bash
