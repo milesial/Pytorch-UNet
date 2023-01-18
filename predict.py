@@ -47,7 +47,8 @@ def get_args():
     parser.add_argument('--scale', '-s', type=float, default=0.5,
                         help='Scale factor for the input images')
     parser.add_argument('--bilinear', action='store_true', default=False, help='Use bilinear upsampling')
-
+    parser.add_argument('--classes', '-c', type=int, default=2, help='Number of classes')
+    
     return parser.parse_args()
 
 
@@ -82,7 +83,7 @@ if __name__ == '__main__':
     in_files = args.input
     out_files = get_output_filenames(args)
 
-    net = UNet(n_channels=3, n_classes=2, bilinear=args.bilinear)
+    net = UNet(n_channels=3, n_classes=args.classes, bilinear=args.bilinear)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f'Loading model {args.model}')
