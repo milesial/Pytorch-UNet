@@ -1,3 +1,5 @@
+# Typed inside container
+
 import argparse
 import logging
 import os
