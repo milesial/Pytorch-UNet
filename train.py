@@ -1,4 +1,5 @@
 # Typed inside container
+# Typed on medphysics machine
 
 import argparse
 import logging
