@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import imageio
 
 # Image directory
-img_dir = 'imgs_wmasks'
-gif_dir = 'masks\\'
+img_dir = 'imgs_wmasks\\LUT020'
+gif_dir = 'masks\\LUT020\\'
 
 # Iterate over files in image directory
 for img_name in os.listdir(img_dir):
@@ -34,5 +34,5 @@ for img_name in os.listdir(img_dir):
     # plt.show()
     
     # Save as gif
-    gif_name = gif_dir + img_name[:16] + img_name[19:23] + '.gif'
+    gif_name = gif_dir + img_name[:17] + img_name[20:24] + '.gif'
     imageio.imsave(gif_name, bin_arr)
