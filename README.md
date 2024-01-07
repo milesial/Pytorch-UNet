@@ -167,9 +167,9 @@ net = torch.hub.load('milesial/Pytorch-UNet', 'unet_carvana', pretrained=True, s
 Available scales are 0.5 and 1.0.
 
 ## Data
-The Carvana data is available on the [Kaggle website](https://www.kaggle.com/c/carvana-image-masking-challenge/data).
+The Carvana data is available on the [Kaggle website](https://www.kaggle.com/c/carvana-image-masking-challenge/data). The datasets initially required are `train_hq.zip` and `train_masks.zip`.
 
-You can also download it using the helper script:
+You can also download the datasets using the helper script:
 
 ```
 bash scripts/download_data.sh
