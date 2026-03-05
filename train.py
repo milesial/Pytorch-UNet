@@ -3,6 +3,7 @@ import logging
 import os
 import random
 import sys
+import time
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -83,6 +84,7 @@ def train_model(
 
     # 5. Begin training
     for epoch in range(1, epochs + 1):
+        epoch_start_time = time.time()
         model.train()
         epoch_loss = 0
         with tqdm(total=n_train, desc=f'Epoch {epoch}/{epochs}', unit='img') as pbar:
@@ -158,6 +160,9 @@ def train_model(
                             })
                         except:
                             pass
+
+        epoch_end_time = time.time()
+        logging.info(f'Epoch {epoch} finished. Time per epoch: {epoch_end_time - epoch_start_time:.2f} seconds')
 
         if save_checkpoint:
             Path(dir_checkpoint).mkdir(parents=True, exist_ok=True)
