@@ -18,6 +18,8 @@ def predict_img(net,
                 scale_factor=1,
                 out_threshold=0.5):
     net.eval()
+    if net.n_channels == 3:
+        full_img = full_img.convert('RGB')
     img = torch.from_numpy(BasicDataset.preprocess(None, full_img, scale_factor, is_mask=False))
     img = img.unsqueeze(0)
     img = img.to(device=device, dtype=torch.float32)

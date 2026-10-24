@@ -150,6 +150,10 @@ optional arguments:
 ```
 You can specify which model file to use with `--model MODEL.pth`.
 
+Prediction inputs are converted to RGB for three-channel models, including grayscale and palette images. For RGBA images, the alpha channel is discarded without compositing onto a background. Models configured with a different number of input channels retain the original image mode.
+
+Run the prediction regression tests with `python -m unittest discover -s tests -v` after installing PyTorch, torchvision, and the dependencies above.
+
 ## Weights & Biases
 
 The training progress can be visualized in real-time using [Weights & Biases](https://wandb.ai/).  Loss curves, validation curves, weights and gradient histograms, as well as predicted masks are logged to the platform.
